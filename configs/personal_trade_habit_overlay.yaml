@@ -1,0 +1,38 @@
+low_entry_position_max: 0.50
+low_entry_score_bonus: 0.020
+
+high_entry_position_min: 0.75
+high_entry_score_penalty: -0.030
+high_entry_weight_multiplier: 0.50
+
+weak_20d_return_min: -0.20
+weak_20d_return_max: -0.05
+weak_20d_score_penalty: -0.015
+weak_20d_weight_multiplier: 0.60
+
+damaged_20d_return_max: -0.25
+damaged_20d_action: watch_only
+
+symbol_history_min_trades: 3
+bad_symbol_pnl_max: -5000.0
+bad_symbol_win_rate_max: 0.35
+bad_symbol_score_penalty: -0.020
+bad_symbol_weight_multiplier: 0.50
+
+severe_bad_symbol_pnl_max: -10000.0
+severe_bad_symbol_action: watch_only
+
+good_symbol_pnl_min: 5000.0
+good_symbol_win_rate_min: 0.55
+good_symbol_score_bonus: 0.010
+
+min_default_holding_days: 4
+avoid_discretionary_sell_before: "10:00"
+
+reselect_top_n: 40
+default_target_weight:
+selection_mode: conservative_fill
+
+# ST stocks remain visible in risk-watch reports but cannot occupy simulated positions
+# until their point-in-time 5% limit rules are fully modeled.
+special_treatment_action: watch_only

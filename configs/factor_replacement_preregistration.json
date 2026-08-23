@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "created_from_asof_date": "2026-07-14",
+  "validation_start_date": "2026-07-15",
+  "selection_status": "exploratory_posthoc_shortlist_preregistered_forward",
+  "incumbent_factor": "liquidity_stability_20",
+  "candidate_factors": [
+    "momentum_20",
+    "breakout_distance_20",
+    "momentum_60"
+  ],
+  "horizons": [
+    5,
+    10,
+    20
+  ],
+  "target_mature_signal_days": 20,
+  "gates": {
+    "min_mean_rank_ic": 0.01,
+    "min_positive_ic_ratio": 0.55,
+    "min_rank_ic_advantage_vs_incumbent": 0.0
+  },
+  "selection_evidence": [
+    {
+      "factor": "momentum_20",
+      "recent_mean_rank_ic": 0.09135217420444812,
+      "recent_positive_ic_ratio": 0.8166666666666668,
+      "recent_ic_advantage_vs_incumbent": 0.08565844539470055
+    },
+    {
+      "factor": "breakout_distance_20",
+      "recent_mean_rank_ic": 0.07051364597393106,
+      "recent_positive_ic_ratio": 0.7999999999999999,
+      "recent_ic_advantage_vs_incumbent": 0.06481991716418349
+    },
+    {
+      "factor": "momentum_60",
+      "recent_mean_rank_ic": 0.04217839312312847,
+      "recent_positive_ic_ratio": 0.7999999999999999,
+      "recent_ic_advantage_vs_incumbent": 0.0364846643133809
+    }
+  ],
+  "research_only": true,
+  "trade_instruction": false,
+  "automatic_model_change": false
+}

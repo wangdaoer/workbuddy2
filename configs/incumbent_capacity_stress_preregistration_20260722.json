@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "registered_at": "2026-07-22",
+  "experiment_id": "incumbent_point_in_time_capacity_stress_20260722",
+  "status": "research_preregistered",
+  "purpose": "Estimate how much of the strict incumbent survives point-in-time traded-amount capacity and partial execution.",
+  "sample_disclosure": "capacity audit on previously observed history; not fresh out-of-sample alpha evidence",
+  "baseline": {
+    "initial_capital": 1000000.0,
+    "total_return": 0.2770555477137875,
+    "annualized_return": 0.07547323418322716,
+    "max_drawdown": -0.28261666997815194,
+    "sharpe_like": 0.46049905012590225,
+    "avg_gross_exposure": 0.787886776859504
+  },
+  "registration_amendment_before_scenario_execution": {
+    "reason": "Baseline metrics omitted the first realized trading return; no capacity scenario had been executed.",
+    "original_total_return": 0.2717680348125111,
+    "original_annualized_return": 0.07423729758169206,
+    "original_sharpe_like": 0.45440477591430184,
+    "equity_path_changed": false,
+    "scenario_or_gate_changed": false
+  },
+  "capacity_contract": {
+    "amount_lookback_sessions": 20,
+    "max_daily_amount_participation": 0.05,
+    "amount_information_cutoff": "signal_date_close",
+    "execution_time": "next_open",
+    "applies_to": [
+      "buy_weight_change",
+      "sell_weight_change"
+    ],
+    "missing_or_nonpositive_amount_capacity": 0.0,
+    "partial_execution": true,
+    "low_liquidity_symbols_removed_before_ranking": false
+  },
+  "fixed_strategy": {
+    "sleeve": "unconstrained",
+    "training_horizons": [
+      1
+    ],
+    "train_days": 252,
+    "retrain_frequency": 20,
+    "rebalance_frequency": 5,
+    "top_n": 40,
+    "max_position_weight": 0.029,
+    "leverage": 0.93,
+    "commission_bps": 1.0,
+    "impact_bps": 0.7,
+    "benchmark": "510300",
+    "market_ma_window": 120,
+    "market_below_ma_exposure": 0.6,
+    "market_risk_off_drawdown_20d": -0.08,
+    "market_crash_exposure": 0.0
+  },
+  "scenarios": [
+    {
+      "id": "capital_10m_participation_5pct",
+      "initial_capital": 10000000.0
+    },
+    {
+      "id": "capital_50m_participation_5pct",
+      "initial_capital": 50000000.0
+    },
+    {
+      "id": "capital_100m_participation_5pct",
+      "initial_capital": 100000000.0
+    },
+    {
+      "id": "capital_500m_participation_5pct",
+      "initial_capital": 500000000.0
+    }
+  ],
+  "capacity_acceptance_gates": {
+    "min_total_return": 0.0,
+    "min_annualized_return": 0.0,
+    "max_drawdown_floor": -0.4,
+    "min_total_return_retention_vs_baseline": 0.8,
+    "min_average_exposure_retention_vs_baseline": 0.8
+  },
+  "largest_acceptable_capital_policy": "largest preregistered scenario passing every capacity acceptance gate",
+  "research_only": true,
+  "trade_instruction": false,
+  "automatic_model_change": false
+}

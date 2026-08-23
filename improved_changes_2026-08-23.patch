@@ -1,0 +1,60 @@
+--- a/build_dashboard.py
++++ b/build_dashboard.py
+@@ -34,8 +34,11 @@
+ # 方案 B 并入版：merge_blend_into_overlay.py 产出。
+ # ⚠️ 隔离研究快照（2026-08-23 起）：经审查发现 blended overlay 与主名单/报告不同批次、
+ # 且并入脚本存在确定性排序 bug（P0-2），未通过 run 一致性校验，禁止作为实盘主名单消费。
+-# 设为 True 时，dashboard 不把 blended overlay 当主名单来源，仅作隔离标注。
+-BLENDED_QUARANTINED = True
++# 隔离态唯一真源 = .QUARANTINE 标记文件存在性（与 publish_blended_release.py G2 一致）：
++# 标记存在 → 隔离生效，dashboard 不把 blended overlay 当主名单来源，仅作隔离标注；
++# 解除隔离 = 删除该标记文件（见报告§五前置条件），无需再改本脚本常量。
++OVERLAY_Q = ROOT / "outputs" / "watchlist_audit" / "full_overlay_calibrated_blended.csv.QUARANTINE"
++BLENDED_QUARANTINED = OVERLAY_Q.exists()
+ BLENDED_OVERLAY = ROOT / "outputs" / "watchlist_audit" / "full_overlay_calibrated_blended.csv"
+ SIGNAL = ROOT / "outputs" / "market_regime" / "breadth_signal.json"
+ REGIME_GLOB = str(ROOT / "outputs" / "ab_pit" / "regime_monitor_*.json")
+--- a/build_premarket_brief.py
++++ b/build_premarket_brief.py
+@@ -28,7 +28,10 @@
+ DERISKED_OVERLAY = OVERLAY_DIR / "full_overlay_calibrated_derisked.csv"
+ # 方案 B 并入版：merge_blend_into_overlay.py 产出。
+ # ⚠️ 隔离研究快照（2026-08-23 起）：未通过 run 一致性校验，禁止作为实盘主名单消费。
+-BLENDED_QUARANTINED = True
++# 隔离态唯一真源 = .QUARANTINE 标记文件存在性（与 publish_blended_release.py G2 一致）：
++# 标记存在 → 隔离生效，主名单回退降仓版→原始 overlay；解除隔离 = 删除该标记文件。
++OVERLAY_Q = OVERLAY_DIR / "full_overlay_calibrated_blended.csv.QUARANTINE"
++BLENDED_QUARANTINED = OVERLAY_Q.exists()
+ BLENDED_OVERLAY = OVERLAY_DIR / "full_overlay_calibrated_blended.csv"
+ SIGNAL_DIR = ROOT / "outputs" / "market_regime"
+ REGIME_DIR = ROOT / "outputs" / "ab_pit"
+--- a/publish_blended_release.py
++++ b/publish_blended_release.py
+@@ -55,8 +55,16 @@
+
+
+ def read_quarantine_flag(src: Path) -> bool:
+-    """从脚本源码读 BLENDED_QUARANTINED 字面量（避免 import 重副作用）。"""
+-    m = re.search(r"BLENDED_QUARANTINED\s*=\s*(True|False)", src.read_text(encoding="utf-8"))
++    """从脚本源码读隔离态（隔离态唯一真源 = .QUARANTINE 标记文件存在性，避免 import 重副作用）。
++
++    新版脚本（build_dashboard.py / build_premarket_brief.py）以
++    `BLENDED_QUARANTINED = OVERLAY_Q.exists()` 派生隔离态；此处识别该形式并实时返回标记状态，
++    与脚本运行时行为保持一致。旧版字面量 `= True/False` 仍兼容。
++    """
++    txt = src.read_text(encoding="utf-8")
++    if re.search(r"BLENDED_QUARANTINED\s*=\s*OVERLAY_Q\.exists\(\)", txt):
++        return OVERLAY_Q.exists()
++    m = re.search(r"BLENDED_QUARANTINED\s*=\s*(True|False)", txt)
+     return m.group(1) == "True" if m else False
+
+
+--- a/outputs/high_return_v2/trend_ignition_daily_pool/blend_manifest.json
++++ b/outputs/high_return_v2/trend_ignition_daily_pool/blend_manifest.json
+@@ -30,5 +30,5 @@
+     "blended_pool": "D:\\workbuddy_strategy\\workbuddy_strategy\\high_risk_quant_model3\\outputs\\high_return_v2\\trend_ignition_daily_pool\\blended_pool.csv",
+     "blended_pool_sha": "f122c88a8ac32e4c"
+   },
+-  "note": "权重 w_ti/w_nor/w_horizon 仍沿用泄漏回测调优结果，待 per-as-of 无泄漏重做后替换。"
++  "note": "权重 w_ti/w_nor/w_horizon 沿用泄漏回测调优结果；经 step5 无泄漏验证（holdout 净20=-10.49% n=3、全轴准OOS 净20=-8.06% n=14）方案 B 纯 OOS 确凿为负，已隔离、不晋级实盘，权重保持冻结不再替换。解除隔离须满足报告§五前置条件（删 .QUARANTINE 标记 + 统计可信正 OOS 样本≥10 且均值>0 + 全部门控通过）。"
+ }

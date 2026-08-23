@@ -1,0 +1,20 @@
+{
+  "schema": "watchlist_personal_overlay_v1",
+  "description": "自选股名单接入个人行为叠加层的规则。交易习惯层(pnl/win_rate)需券商成交记录激活；当前名单只激活 ST 过滤与再选/等权。",
+  "selection_mode": "conservative_fill",
+  "reselect_top_n": 20,
+  "default_target_weight": 0.05,
+  "min_default_holding_days": 5,
+  "avoid_discretionary_sell_before": "2026-08-20",
+  "symbol_history_min_trades": 3,
+  "bad_symbol_pnl_max": -5000.0,
+  "bad_symbol_win_rate_max": 0.35,
+  "bad_symbol_score_penalty": -0.02,
+  "bad_symbol_weight_multiplier": 0.5,
+  "severe_bad_symbol_pnl_max": -10000.0,
+  "severe_bad_symbol_action": "watch_only",
+  "good_symbol_pnl_min": 5000.0,
+  "good_symbol_win_rate_min": 0.55,
+  "good_symbol_score_bonus": 0.01,
+  "special_treatment_action": "watch_only"
+}

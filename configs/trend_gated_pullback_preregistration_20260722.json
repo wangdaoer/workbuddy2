@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "registered_at": "2026-07-22",
+  "experiment_id": "trend_gated_pullback_strict_1d_20260722",
+  "status": "research_preregistered",
+  "purpose": "Test trend as an eligibility gate and low-volatility pullback as the only ranking signal.",
+  "selection_policy": "single_primary_hypothesis_sequential_fail_fast",
+  "sample_disclosure": "exploratory research on previously observed history; passing can only qualify for new forward observation",
+  "incumbent": {
+    "sleeve": "unconstrained",
+    "total_return": 0.2717680348125111,
+    "annualized_return": 0.07423729758169206,
+    "max_drawdown": -0.28261666997815194,
+    "sharpe_like": 0.45440477591430184
+  },
+  "metric_correction_after_result": {
+    "reason": "The original presentation omitted the first realized trading return.",
+    "corrected_incumbent_total_return": 0.2770555477137875,
+    "corrected_incumbent_annualized_return": 0.07547323418322716,
+    "corrected_incumbent_sharpe_like": 0.46049905012590225,
+    "corrected_candidate_total_return": 0.20632976119282054,
+    "corrected_candidate_annualized_return": 0.05739640806205992,
+    "corrected_candidate_sharpe_like": 0.4227665024547449,
+    "decision_changed": false
+  },
+  "candidate": {
+    "sleeve": "trend_gated_pullback",
+    "features": {
+      "trend_gated_pullback_absorption": 1
+    },
+    "trend_gate": {
+      "momentum_20_min_exclusive": 0.0,
+      "breakout_20_min_exclusive": -0.1
+    },
+    "ranking_formula": "rank_pct(reversal_5_rank * (1 - volatility_20_rank)) within eligible symbols",
+    "training_horizons": [
+      1
+    ]
+  },
+  "fixed_execution": {
+    "train_days": 252,
+    "retrain_frequency": 20,
+    "rebalance_frequency": 5,
+    "top_n": 40,
+    "max_position_weight": 0.029,
+    "leverage": 0.93,
+    "commission_bps": 1.0,
+    "impact_bps": 0.7,
+    "benchmark": "510300",
+    "market_ma_window": 120,
+    "market_below_ma_exposure": 0.6,
+    "market_risk_off_drawdown_20d": -0.08,
+    "market_crash_exposure": 0.0
+  },
+  "stage_1_strict_superiority_gates": {
+    "total_return_min_exclusive": 0.2717680348125111,
+    "annualized_return_min_exclusive": 0.07423729758169206,
+    "max_drawdown_min_inclusive": -0.28261666997815194,
+    "sharpe_like_min_exclusive": 0.45440477591430184
+  },
+  "stage_2_robustness_gates": {
+    "mean_rank_ic_min_exclusive": 0.0,
+    "positive_rank_ic_ratio_min_inclusive": 0.52,
+    "contiguous_equal_segments": 3,
+    "min_segments_with_positive_return_and_ic": 2,
+    "max_mean_cross_sectional_correlation_vs_reversal_5": 0.8,
+    "max_mean_cross_sectional_correlation_vs_breakout_20": 0.8,
+    "max_top_decile_overlap_vs_atomic_sleeves": 0.7,
+    "double_cost_annualized_return_min_exclusive": 0.0,
+    "three_percent_open_gap_annualized_return_min_exclusive": 0.0
+  },
+  "sequential_policy": "Do not run or interpret stage 2 after any stage 1 failure.",
+  "flow_confirmation": {
+    "historical_backtest_allowed": false,
+    "forward_observation_only": true,
+    "observation_start": "2026-06-22",
+    "target_mature_signal_days": 60
+  },
+  "research_only": true,
+  "trade_instruction": false,
+  "automatic_model_change": false
+}

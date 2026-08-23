@@ -1,0 +1,412 @@
+strategy: multifactor_observation
+
+research:
+  target_mode: stretch_research
+  annual_return_stretch: 10.0
+  benchmark: CSI1000
+
+locked_execution:
+  signal_lag_sessions: 1
+  execution_model: next_open
+  historical_universe_only: true
+  allow_short: false
+  max_leverage: 1.0
+  block_limit_up_buys: true
+  block_limit_down_sells: true
+
+evolution_core:
+  max_candidates_per_group: 8
+  random_seed: 20260714
+  min_folds: 3
+  min_filled_trades_per_fold: 5
+  min_positive_fold_ratio: 0.6666666667
+  min_mean_return_improvement: 0.01
+  max_drawdown_floor: -0.40
+  max_drawdown_worsening: 0.05
+  max_turnover_ratio: 1.50
+  max_pnl_concentration: 0.50
+
+periods:
+  research_start: 2022-01-01
+  selection_start: 2023-01-01
+  selection_end: 2025-12-31
+  holdout_start: 2026-01-01
+  holdout_end:
+  fold_sessions: 126
+  step_sessions: 63
+  warmup_sessions: 80
+
+baseline:
+  momentum_20_weight: 0.25
+  momentum_60_weight: 0.20
+  breakout_distance_20_weight: 0.20
+  trend_acceleration_weight: 0.15
+  liquidity_20_weight: 0.10
+  liquidity_stability_20_weight: 0.10
+  top_n: 8
+  rebalance_frequency: 5
+  gross_exposure: 1.0
+  max_position_weight: 0.15
+  min_score: 0.60
+  min_momentum_20: -1.0
+  min_momentum_60: -1.0
+  min_breakout_distance_20: -1.0
+  max_momentum_20: 1000000.0
+  max_momentum_60: 1000000.0
+  max_breakout_distance_20: 1000000.0
+  min_median_amount_20: 30000000
+  max_daily_amount_participation: 0.05
+  market_ma_window: 120
+  market_below_ma_exposure: 1.0
+  market_risk_off_drawdown_20d: -1.0
+  market_crash_exposure: 1.0
+  breadth_ma_window: 20
+  breadth_risk_off_gap: -1.0
+  breadth_risk_off_exposure: 1.0
+  breadth_crash_gap: -1.0
+  breadth_crash_exposure: 1.0
+  portfolio_stop_drawdown: -1.0
+  portfolio_stop_cooldown_sessions: 10
+  initial_capital: 1000000
+  commission_bps: 3.0
+  impact_bps: 7.0
+  max_buy_open_gap: 0.03
+  limit_buffer: 0.995
+
+search_groups:
+  - id: factor_balance
+    hypothesis: Test whether shorter momentum and breakout evidence improve robustness.
+    candidates:
+      - id: balanced_breakout
+        overrides:
+          momentum_20_weight: 0.25
+          momentum_60_weight: 0.15
+          breakout_distance_20_weight: 0.25
+          trend_acceleration_weight: 0.15
+          liquidity_20_weight: 0.10
+          liquidity_stability_20_weight: 0.10
+      - id: acceleration_tilt
+        overrides:
+          momentum_20_weight: 0.20
+          momentum_60_weight: 0.15
+          breakout_distance_20_weight: 0.20
+          trend_acceleration_weight: 0.25
+          liquidity_20_weight: 0.10
+          liquidity_stability_20_weight: 0.10
+      - id: liquidity_tilt
+        overrides:
+          momentum_20_weight: 0.20
+          momentum_60_weight: 0.15
+          breakout_distance_20_weight: 0.20
+          trend_acceleration_weight: 0.15
+          liquidity_20_weight: 0.15
+          liquidity_stability_20_weight: 0.15
+
+  - id: concentration
+    hypothesis: Test whether a smaller or broader basket improves out-of-sample stability.
+    candidates:
+      - id: concentrated_6
+        overrides:
+          top_n: 6
+          max_position_weight: 0.18
+      - id: diversified_12
+        overrides:
+          top_n: 12
+          max_position_weight: 0.10
+
+  - id: turnover_and_capacity
+    hypothesis: Test lower turnover and stricter liquidity without relaxing execution rules.
+    candidates:
+      - id: biweekly_liquid
+        overrides:
+          rebalance_frequency: 10
+          min_median_amount_20: 50000000
+      - id: weekly_strict_capacity
+        overrides:
+          rebalance_frequency: 5
+          min_median_amount_20: 50000000
+          max_daily_amount_participation: 0.03
+      - id: high_conviction
+        overrides:
+          min_score: 0.70
+          top_n: 6
+
+  - id: market_regime
+    hypothesis: Test point-in-time CSI1000 de-risking without leverage or relaxed execution.
+    candidates:
+      - id: ma120_defensive
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.50
+          market_risk_off_drawdown_20d: -0.08
+          market_crash_exposure: 0.0
+      - id: ma60_balanced
+        overrides:
+          market_ma_window: 60
+          market_below_ma_exposure: 0.60
+          market_risk_off_drawdown_20d: -0.10
+          market_crash_exposure: 0.20
+      - id: ma120_gradual
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+
+  - id: absolute_trend_guard
+    hypothesis: Reject relatively strong stocks whose own point-in-time trend has already broken.
+    candidates:
+      - id: absolute_trend_only
+        overrides:
+          min_momentum_20: 0.0
+          min_momentum_60: 0.0
+          min_breakout_distance_20: -0.10
+      - id: ma120_absolute_trend
+        overrides:
+          min_momentum_20: 0.0
+          min_momentum_60: 0.0
+          min_breakout_distance_20: -0.10
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+      - id: ma120_defensive_near_breakout
+        overrides:
+          min_momentum_20: 0.03
+          min_momentum_60: 0.05
+          min_breakout_distance_20: -0.05
+          market_ma_window: 120
+          market_below_ma_exposure: 0.50
+          market_risk_off_drawdown_20d: -0.08
+          market_crash_exposure: 0.0
+
+  - id: portfolio_drawdown_stop
+    hypothesis: Exit at the next open after portfolio drawdown breaches a point-in-time limit.
+    candidates:
+      - id: portfolio_stop_10d_10pct
+        overrides:
+          portfolio_stop_drawdown: -0.10
+          portfolio_stop_cooldown_sessions: 10
+      - id: portfolio_stop_10d_15pct
+        overrides:
+          portfolio_stop_drawdown: -0.15
+          portfolio_stop_cooldown_sessions: 10
+      - id: ma120_portfolio_stop
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 10
+      - id: portfolio_stop_30d_10pct
+        overrides:
+          portfolio_stop_drawdown: -0.10
+          portfolio_stop_cooldown_sessions: 30
+      - id: portfolio_stop_30d_15pct
+        overrides:
+          portfolio_stop_drawdown: -0.15
+          portfolio_stop_cooldown_sessions: 30
+      - id: ma120_portfolio_stop_30d
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+
+  - id: overextension_guard
+    hypothesis: Reject point-in-time long-horizon or breakout overextension implicated by wf_08 reversal evidence.
+    candidates:
+      - id: ma120_stop30_reference
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: ma120_stop30_max_m60_150
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+          max_momentum_60: 1.50
+      - id: ma120_stop30_max_breakout_10
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+          max_breakout_distance_20: 0.10
+      - id: ma120_stop30_combined_extension
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+          max_momentum_60: 1.50
+          max_breakout_distance_20: 0.10
+
+  - id: momentum_breadth_regime
+    hypothesis: Reduce next-open exposure when point-in-time cross-sectional momentum breadth weakens versus its 20-session mean.
+    candidates:
+      - id: ma120_stop30_breadth_reference
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: ma120_stop30_breadth_soft
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.40
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: ma120_stop30_breadth_hard
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: ma120_stop30_breadth_tiered
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.05
+          breadth_risk_off_exposure: 0.40
+          breadth_crash_gap: -0.10
+          breadth_crash_exposure: 0.0
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+
+  - id: momentum_breadth_refinement
+    hypothesis: Test whether a small weak-breadth exposure or removing the redundant portfolio stop improves fold consistency without losing the hard breadth benefit.
+    candidates:
+      - id: breadth_ref_hard
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: breadth_weak_exposure_10
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.10
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: breadth_weak_exposure_20
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.20
+          portfolio_stop_drawdown: -0.12
+          portfolio_stop_cooldown_sessions: 30
+      - id: breadth_hard_without_portfolio_stop
+        overrides:
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+
+  - id: healthy_breadth_factor_selection
+    hypothesis: Retain only factor signals supported by healthy-breadth RankIC and leave-one-out attribution while preserving the hard breadth execution regime.
+    candidates:
+      - id: breadth_hard_liquidity_stability_only
+        overrides:
+          momentum_20_weight: 0.0
+          momentum_60_weight: 0.0
+          breakout_distance_20_weight: 0.0
+          trend_acceleration_weight: 0.0
+          liquidity_20_weight: 0.0
+          liquidity_stability_20_weight: 1.0
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+      - id: breadth_hard_stability70_momentum60_30
+        overrides:
+          momentum_20_weight: 0.0
+          momentum_60_weight: 0.30
+          breakout_distance_20_weight: 0.0
+          trend_acceleration_weight: 0.0
+          liquidity_20_weight: 0.0
+          liquidity_stability_20_weight: 0.70
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+      - id: breadth_hard_stability50_momentum60_50
+        overrides:
+          momentum_20_weight: 0.0
+          momentum_60_weight: 0.50
+          breakout_distance_20_weight: 0.0
+          trend_acceleration_weight: 0.0
+          liquidity_20_weight: 0.0
+          liquidity_stability_20_weight: 0.50
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+      - id: breadth_hard_momentum60_only
+        overrides:
+          momentum_20_weight: 0.0
+          momentum_60_weight: 1.0
+          breakout_distance_20_weight: 0.0
+          trend_acceleration_weight: 0.0
+          liquidity_20_weight: 0.0
+          liquidity_stability_20_weight: 0.0
+          market_ma_window: 120
+          market_below_ma_exposure: 0.40
+          market_risk_off_drawdown_20d: -0.12
+          market_crash_exposure: 0.20
+          breadth_risk_off_gap: 0.0
+          breadth_risk_off_exposure: 0.0
+
+holdout:
+  min_sessions: 60
+  min_return_delta: 0.00
+  min_excess_return: 0.00
+  max_drawdown_floor: -0.40
+  min_double_cost_return: 0.00
+  min_double_cost_return_delta: 0.00
+  min_positive_excess_fold_ratio: 0.6666666667

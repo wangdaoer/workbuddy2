@@ -1,0 +1,86 @@
+schema_version: 2
+mode: manual_review_only
+broker:
+  name: gf_securities
+  name_cn: 广发证券
+  connect_broker: false
+  place_orders: false
+account:
+  account_equity: 10000.0
+  max_deploy_ratio: 1.00
+  cash_buffer_ratio: 0.00
+risk:
+  max_single_position_ratio: 0.35
+  lot_size: 100
+  min_order_value: 0.0
+  small_account_min_lot_fill: true
+production_market_risk:
+  enabled: true
+  base_strategy_gross_limit: 0.93
+  ma_window: 120
+  risk_off_drawdown_20d: -0.08
+  below_ma_exposure: 0.60
+  crash_exposure: 0.0
+allocation:
+  method: lot_knapsack
+  quality_template_bonus: 3.0
+  preferred_board_bonus: 1.5
+  rank_bonus_scale: 1.0
+  rank_bonus_ceiling: 120
+  raw_weight_scale: 10.0
+prelive_account_shadow:
+  initial_cash: 10000.0
+  lot_size: 100
+  commission_bps: 3.0
+  minimum_commission: 5.0
+  sell_stamp_tax_bps: 5.0
+  slippage_bps: 5.0
+  max_buy_open_gap: 0.06
+  limit_buffer: 0.995
+  block_limit_up_buys: true
+  block_limit_down_sells: true
+universe_focus:
+  enabled: true
+  preferred_board_prefixes:
+    - "300"
+    - "301"
+  exceptional_main_board_prefixes:
+    - "000"
+    - "001"
+    - "002"
+    - "600"
+    - "601"
+    - "603"
+    - "605"
+  exceptional_main_board_max_rank: 10
+  exceptional_main_board_trend_states:
+    - 趋势确认
+    - 生命线健康
+    - 回调可观察
+    - 起爆观察
+  quality_templates:
+    high_liquidity_stable_trend:
+      enabled: true
+      min_avg_amount_20d: 1000000000.0
+      min_return_20d: 0.05
+      min_return_60d: 0.10
+      max_close_position: 0.98
+      boards:
+        - 主板
+        - 创业板
+      label_cn: 高成交额稳趋势
+    chinext_elastic_trend:
+      enabled: true
+      min_avg_amount_20d: 200000000.0
+      min_return_20d: 0.03
+      min_return_60d: 0.12
+      max_close_position: 0.98
+      boards:
+        - 创业板
+      label_cn: 创业板弹性趋势
+  exclude_other_boards: true
+  require_manual_confirmation: true
+  allow_auto_submit: false
+notes:
+  - This pre-live file is for manual review only.
+  - It must never be used as a broker order payload.

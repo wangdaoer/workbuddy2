@@ -1,0 +1,40 @@
+initial_capital: 1000000
+start_date: null
+end_date: null
+universe:
+  top_n_by_mcap: 120
+signal:
+  short_window: 2
+  long_window: 4
+  breakout_window: 4
+  acceleration_window: 2
+  breakout_threshold: 0.001
+  vol_window: 4
+  signal_type: trend_breakout_accel
+  top_n_long: 8
+  top_n_short: 0
+  only_long: true
+  breakout_up_weight: 0.70
+  breakout_dn_weight: -0.05
+  trend_weight: 0.15
+  accel_weight: 0.20
+  signal_noise_clip: 4.5
+portfolio:
+  rebalance_frequency: 1
+  long_exposure: 1.0
+  short_exposure: 0.0
+  max_position_weight: 0.14
+  use_net_neutral: false
+  allow_short: false
+  leverage: 2.0
+risk:
+  max_drawdown: 0.40
+  drawdown_cooldown_days: 1
+  target_annualized_vol: 1.0
+  vol_lookback: 20
+  min_signal_non_na_ratio: 0.10
+cost:
+  commission_bps: 0.7
+  impact_bps: 0.35
+output:
+  output_dir: outputs/high_return_v2

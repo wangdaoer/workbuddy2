@@ -1,0 +1,35 @@
+signal.short_window:
+  - 2
+  - 3
+  - 4
+  - 5
+signal.long_window:
+  - 8
+  - 12
+  - 16
+signal.breakout_threshold:
+  - 0.002
+  - 0.004
+  - 0.008
+portfolio.max_position_weight:
+  - 0.10
+  - 0.12
+  - 0.15
+portfolio.leverage:
+  - 1.5
+  - 1.8
+  - 2.0
+risk.target_annualized_vol:
+  - 0.65
+  - 0.80
+  - 0.95
+risk.max_drawdown:
+  - 0.22
+  - 0.30
+  - 0.38
+risk.drawdown_cooldown_days:
+  - 1
+  - 2
+cost.commission_bps:
+  - 0.7
+  - 0.9

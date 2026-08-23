@@ -1,0 +1,33 @@
+{
+  "registration_id": "trend_ignition_shortlist_20260714_v1",
+  "status": "rejected",
+  "reason": "preregistered unseen bucket-spread and correlation gates failed",
+  "model_sha256": "462b1431388d79b61db2bdd86daeab55f342e9f131f32dc64a7922d9ae342e0f",
+  "training_end_date": "2025-06-12",
+  "signal_start_date": "2025-06-13",
+  "signal_end_date": "2025-07-14",
+  "data_end_date": "2026-07-14",
+  "completed_samples": 1098,
+  "overall_positive_rate": 0.14663023679417123,
+  "bucket_counts": {
+    "high": 254,
+    "middle": 296,
+    "low": 548
+  },
+  "bucket_positive_rates": {
+    "high": 0.14173228346456693,
+    "middle": 0.13513513513513514,
+    "low": 0.1551094890510949
+  },
+  "fixed_bucket_spread": -0.013377205586527968,
+  "fixed_bucket_spread_95pct_normal_interval": [
+    -0.06589853737981699,
+    0.03914412620676106
+  ],
+  "score_label_corr": -0.0011205702894790414,
+  "feature_label_corr": {
+    "feature_volatility_20d": 0.0026033572166897514,
+    "feature_close_over_ma20": 0.006770353323278964
+  },
+  "promotion_decision": "rejected"
+}

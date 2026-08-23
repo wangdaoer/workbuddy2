@@ -1,0 +1,48 @@
+schema_version: 1
+registration_id: trend_ignition_shortlist_20260714_v1
+status: preregistered_research_only
+registered_at: "2026-07-14"
+
+source:
+  draft_pr: 17
+  source_commit: 3333f08
+  model_path: configs/models/trend_ignition_shortlist_20260714_v1.json
+  model_sha256: 462b1431388d79b61db2bdd86daeab55f342e9f131f32dc64a7922d9ae342e0f
+
+research_contract:
+  feature_contract: ignition_close_point_in_time_v2
+  feature_columns:
+    - feature_volatility_20d
+    - feature_close_over_ma20
+  bins: 5
+  label_column: label_high_trend
+  label_peak_return_at_least: 1.5
+  label_days_to_peak_at_least: 120
+  outcome_horizon_days: 365
+  minimum_followup_days: 365
+  ignition_cooldown_bars: 20
+  training_end_date: "2025-06-12"
+  training_periods:
+    - "2018_2020"
+    - "2021_2023"
+    - "2024_2026"
+
+unseen_validation:
+  signal_date_must_be_after: "2025-06-12"
+  minimum_completed_samples: 500
+  required_buckets:
+    - high
+    - middle
+    - low
+  minimum_bucket_count: 50
+  minimum_each_period_bucket_spread: 0.005
+  minimum_mean_bucket_spread: 0.01
+  minimum_each_period_score_label_corr: 0.01
+  minimum_mean_score_label_corr: 0.02
+
+promotion_controls:
+  allow_daily_ranking: false
+  allow_position_sizing: false
+  allow_live_trading: false
+  require_new_unseen_period: true
+  require_manual_review: true

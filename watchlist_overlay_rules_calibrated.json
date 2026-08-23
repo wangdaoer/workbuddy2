@@ -1,0 +1,22 @@
+{
+  "schema": "watchlist_personal_overlay_v1_calibrated",
+  "description": "校准版规则：按用户 2026-04-15..07-22 广发对账单实际盈亏分布校准（单票已实现最大亏 -886、最大盈 +2469），使行为层在真实数据上可触发；bad=-400/severe=-800/good=+1000。",
+  "selection_mode": "conservative_fill",
+  "reselect_top_n": 20,
+  "default_target_weight": 0.05,
+  "min_default_holding_days": 5,
+  "avoid_discretionary_sell_before": "2026-08-20",
+  "symbol_history_min_trades": 2,
+  "bad_symbol_pnl_max": -400.0,
+  "bad_symbol_win_rate_max": 0.35,
+  "bad_symbol_score_penalty": -0.02,
+  "bad_symbol_weight_multiplier": 0.5,
+  "severe_bad_symbol_pnl_max": -800.0,
+  "severe_bad_symbol_action": "watch_only",
+  "good_symbol_pnl_min": 1000.0,
+  "good_symbol_win_rate_min": 0.55,
+  "good_symbol_score_bonus": 0.01,
+  "special_treatment_action": "watch_only",
+  "watchlist_preference_bonus": 0.005,
+  "watchlist_quota": 20
+}

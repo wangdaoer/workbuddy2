@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "registration_id": "market_breadth_mismatch_observer_20260723",
+  "status": "preregistered_research_only",
+  "frozen_at": "2026-07-23",
+  "observation_start_date": "2026-07-23",
+  "target_matured_trade_days": 60,
+  "breadth_ma_window": 60,
+  "cross_sectional_return_window": 20,
+  "weak_breadth_threshold": 0.5,
+  "high_benchmark_exposure_threshold": 0.6,
+  "research_only": true,
+  "promotion_allowed": false,
+  "automatic_model_change": false,
+  "selection_effect": false,
+  "position_effect": false,
+  "notes": [
+    "The observer measures broad-universe state and the incumbent 510300 exposure target.",
+    "A mismatch is breadth below 50% while the benchmark target exposure is at least 60%.",
+    "The 50% and 60% values are diagnostic labels, not trading thresholds.",
+    "Only observations dated 2026-07-23 or later enter forward statistics.",
+    "No observation can change ranking, position sizing, orders, or production configuration."
+  ]
+}

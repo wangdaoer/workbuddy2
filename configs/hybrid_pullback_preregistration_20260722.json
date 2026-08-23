@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "registered_at": "2026-07-22",
+  "experiment_id": "hybrid_pullback_attribution_strict_1d_20260722",
+  "status": "research_preregistered",
+  "purpose": "Test whether the strict rank model's value can be reproduced by one isolated trend-then-pullback interaction.",
+  "selection_policy": "single_primary_hypothesis_no_winner_selection",
+  "sample_disclosure": "exploratory attribution on previously observed history; not fresh out-of-sample evidence",
+  "incumbent": {
+    "sleeve": "unconstrained",
+    "total_return": 0.2717680348125111,
+    "annualized_return": 0.07423729758169206,
+    "max_drawdown": -0.28261666997815194,
+    "sharpe_like": 0.45440477591430184
+  },
+  "metric_correction_after_result": {
+    "reason": "The original presentation omitted the first realized trading return.",
+    "corrected_incumbent_total_return": 0.2770555477137875,
+    "corrected_incumbent_annualized_return": 0.07547323418322716,
+    "corrected_incumbent_sharpe_like": 0.46049905012590225,
+    "corrected_candidate_total_return": -0.5104957333287865,
+    "decision_changed": false
+  },
+  "candidate": {
+    "sleeve": "hybrid_pullback",
+    "features": {
+      "strong_pullback_20_5": 1
+    },
+    "feature_definition": "cross_sectional_rank(momentum_20_rank * reversal_5_rank)",
+    "training_horizons": [
+      1
+    ]
+  },
+  "fixed_execution": {
+    "train_days": 252,
+    "retrain_frequency": 20,
+    "rebalance_frequency": 5,
+    "top_n": 40,
+    "max_position_weight": 0.029,
+    "leverage": 0.93,
+    "commission_bps": 1.0,
+    "impact_bps": 0.7,
+    "benchmark": "510300",
+    "market_ma_window": 120,
+    "market_below_ma_exposure": 0.6,
+    "market_risk_off_drawdown_20d": -0.08,
+    "market_crash_exposure": 0.0
+  },
+  "stress": {
+    "double_cost_commission_bps": 2.0,
+    "double_cost_impact_bps": 1.4
+  },
+  "attribution_gates": {
+    "min_total_return": 0.0,
+    "min_annualized_return": 0.0,
+    "min_sharpe_like": 0.0,
+    "max_drawdown_floor": -0.35,
+    "max_drawdown_worsening_vs_incumbent": 0.05,
+    "min_positive_calendar_year_ratio": 0.5,
+    "double_cost_min_total_return": 0.0
+  },
+  "replacement_gates": {
+    "min_annualized_return_delta_vs_incumbent": 0.0,
+    "min_sharpe_delta_vs_incumbent": 0.0,
+    "max_drawdown_worsening_vs_incumbent": 0.03
+  },
+  "flow_confirmation": {
+    "historical_backtest_allowed": false,
+    "reason": "main_net_inflow and main_net_volume_ratio are materially incomplete before 2026-06-22",
+    "forward_observation_only": true,
+    "observation_start": "2026-06-22",
+    "target_mature_signal_days": 60
+  },
+  "research_only": true,
+  "trade_instruction": false,
+  "automatic_model_change": false
+}

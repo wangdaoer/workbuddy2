@@ -1,0 +1,7 @@
+date: price_date
+symbol: code
+close: close_price
+open: close_price
+high: close_price
+low: close_price
+volume:

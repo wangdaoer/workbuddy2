@@ -1,0 +1,15 @@
+world_event_shadow:
+  api_base_url: https://api.worldmonitor.app
+  api_key_env: WORLDMONITOR_API_KEY
+  timeout_seconds: 12
+  max_cache_age_hours: 72
+  stale_after_hours: 36
+  minimum_known_components: 2
+  endpoint_paths:
+    macro_signals: /api/economic/v1/get-macro-signals
+    fear_greed: /api/market/v1/get-fear-greed-index
+    economic_stress: /api/economic/v1/get-economic-stress
+  component_weights:
+    macro_risk: 0.35
+    financial_stress: 0.40
+    fear_risk: 0.25

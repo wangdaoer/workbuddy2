@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "registration_id": "dynamic_breadth_overlay_strict_labels_20260722",
+  "status": "preregistered_research_only",
+  "frozen_at": "2026-07-22",
+  "observation_start_date": "2026-07-23",
+  "target_valid_trade_days": 60,
+  "incumbent_model_id": "core_rank",
+  "challenger_model_id": "core_breadth_guard",
+  "input_contract": {
+    "required_columns": [
+      "date",
+      "equity"
+    ],
+    "latest_date_must_match": true,
+    "reject_duplicate_dates": true
+  },
+  "gates": {
+    "cumulative_excess_return_gt": 0.0,
+    "min_positive_excess_day_ratio": 0.55,
+    "max_drawdown_worsening": 0.03
+  },
+  "research_only": true,
+  "promotion_allowed": false,
+  "automatic_model_change": false,
+  "notes": [
+    "Forward statistics may only use shared dates on or after 2026-07-23.",
+    "Historical dates before the observation start remain descriptive background only.",
+    "The registration was reset after purging immature next-open labels from both model trainers.",
+    "Both models use strict one-day IC training; the rejected 1/3/5-day challenger is excluded.",
+    "Promotion stays disabled even after maturity; any decision is manual research review only."
+  ]
+}

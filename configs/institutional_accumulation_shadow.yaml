@@ -1,0 +1,31 @@
+institutional_accumulation:
+  # Frozen v1 screening thresholds. Do not tune them against post-registration outcomes.
+  min_price_history: 80
+  min_flow_history: 5
+  max_daily_return: 0.07
+  min_return_20d: -0.05
+  max_return_20d: 0.20
+  min_drawdown_20d: -0.12
+  min_distance_ma20: -0.03
+  max_distance_ma20: 0.10
+  max_range_15d: 0.25
+  min_ma20_ma60_ratio: 0.96
+  min_amount_ratio_5d: 1.10
+  max_amount_ratio_5d: 2.50
+  min_up_amount_persistence_10d: 0.50
+  max_single_day_amount_spike_20d: 3.0
+  min_flow_positive_ratio_5d: 0.60
+  min_flow_rank_5d: 0.60
+  watch_score: 60.0
+  strong_score: 75.0
+  top_n: 80
+
+  # Prospective validation contract.
+  minimum_completed_samples: 80
+  minimum_bucket_samples: 20
+  primary_horizon: 5
+  minimum_primary_hit_rate: 0.52
+  minimum_primary_mean_return: 0.0
+  registration_id: institutional_accumulation_shadow_v1
+  registration_date: "2026-07-18"
+  validation_start_date: "2026-07-20"

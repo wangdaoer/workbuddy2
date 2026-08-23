@@ -1,0 +1,4 @@
+# 开发/测试依赖（P2: 与运行时依赖拆分）
+# 说明：工作区当前不含 tests/（tests/test_*.py 仅存在于历史快照 PACKAGE_MANIFEST.json），
+# 本文件供未来补充测试套件后在干净环境 CI 使用。
+pytest>=8.0

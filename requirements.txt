@@ -1,0 +1,12 @@
+pandas>=2.2
+numpy>=1.26
+pyyaml>=6.0
+tabulate>=0.9
+openpyxl>=3.1
+matplotlib>=3.8
+scipy>=1.13
+pyarrow>=16
+# P2: 补齐被入口脚本实际 import 的运行时依赖（train_next_open_rank_model / gfyj_broker_statement 等）
+lightgbm>=4.0
+pillow>=10.0
+python-docx>=1.1

@@ -1,0 +1,20 @@
+# TDX realtime quote probe.
+# Research-only: this source is used for intraday observation/freshness checks,
+# not for broker connection or automatic trading.
+
+tdx_repo: D:\codex\_repo_cache\tdx-api
+go_exe: D:\codex\tools\go-go1.26.5\go\bin\go.exe
+priority_output_root: outputs/high_return_v2
+output_dir: outputs/realtime_tdx
+
+# By default, sample the latest Model3 priority watchlist plus 510300 for
+# benchmark/freshness comparison. The ETF code is not used for stock selection.
+top_n: 20
+extra_codes:
+  - "510300"
+
+# Use samples > 1 during market hours. Example:
+# python tdx_realtime_probe.py --samples 8 --interval-seconds 30
+samples: 1
+interval_seconds: 30
+timeout_seconds: 60

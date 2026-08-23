@@ -1,0 +1,72 @@
+{
+  "equity_source": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\equity_curve.csv",
+  "weights_source": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\rolling_feature_weights.csv",
+  "equity_rows": 847,
+  "equity_start": "2023-01-20",
+  "equity_end": "2026-07-22",
+  "equity_missing_values": {
+    "date": 0,
+    "equity": 0,
+    "gross_return": 0,
+    "cost": 0,
+    "turnover": 0,
+    "gross_exposure": 0,
+    "market_exposure": 0,
+    "positions_count": 0,
+    "rebalance_due": 0,
+    "scheduled_rebalance_due": 0,
+    "risk_exposure_decrease_event": 0,
+    "risk_rebalance_due": 0,
+    "execution_rebalance_due": 0,
+    "risk_exposure_ceiling_target": 0,
+    "risk_target_gross_cap": 0,
+    "risk_deleverage_shortfall_weight": 0,
+    "risk_deleverage_residual": 0,
+    "risk_unexplained_residual": 0,
+    "risk_zero_target_non_rebalance_with_positions": 0,
+    "risk_zero_target_unattempted": 0,
+    "risk_zero_target_unexplained_residual": 0,
+    "requested_target_gross_exposure": 0,
+    "open_constrained_gross_exposure": 0,
+    "open_constraint_limited_symbols": 0,
+    "open_constraint_blocked_buy_weight": 0,
+    "open_constraint_blocked_sell_weight": 0,
+    "capacity_limited_symbols": 0,
+    "capacity_blocked_buy_weight": 0,
+    "capacity_blocked_sell_weight": 0,
+    "net_return": 0,
+    "nav": 0,
+    "drawdown": 0
+  },
+  "weight_rows": 43,
+  "weight_factor_count": 15,
+  "max_drawdown_recomputed": -0.2826166699781518,
+  "annual_net_returns": {
+    "2023": -0.006070317420538207,
+    "2024": -0.022818499339005816,
+    "2025": 0.37333383955188415,
+    "2026": -0.04257939569471669
+  },
+  "market_exposure_session_counts": {
+    "0.00": 2,
+    "0.60": 332,
+    "1.00": 513
+  },
+  "figure_outputs": {
+    "figure_1": {
+      "png": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_1_equity_drawdown.png",
+      "pdf": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_1_equity_drawdown.pdf",
+      "grayscale_preview": "D:\\codex\\智能化\\high_risk_quant_model3\\tmp\\paper_figures_gray\\figure_1_equity_drawdown_gray.png"
+    },
+    "figure_2": {
+      "png": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_2_calendar_exposure.png",
+      "pdf": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_2_calendar_exposure.pdf",
+      "grayscale_preview": "D:\\codex\\智能化\\high_risk_quant_model3\\tmp\\paper_figures_gray\\figure_2_calendar_exposure_gray.png"
+    },
+    "figure_3": {
+      "png": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_3_rolling_factor_weights.png",
+      "pdf": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\figures\\figure_3_rolling_factor_weights.pdf",
+      "grayscale_preview": "D:\\codex\\智能化\\high_risk_quant_model3\\tmp\\paper_figures_gray\\figure_3_rolling_factor_weights_gray.png"
+    }
+  }
+}

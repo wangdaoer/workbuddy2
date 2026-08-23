@@ -1,0 +1,2 @@
+# Optional research-only Chan-structure adapter.  CZSC 1.0 RC is API-incompatible.
+czsc==0.10.12

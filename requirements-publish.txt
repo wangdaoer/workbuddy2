@@ -1,0 +1,2 @@
+# Optional local dependency for publishing sanitized snapshots to private storage.
+vercel>=0.7,<0.8

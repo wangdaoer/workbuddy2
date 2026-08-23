@@ -1,0 +1,117 @@
+strategy: strong_pullback_satellite
+
+evolution_core:
+  max_candidates_per_group: 8
+  random_seed: 20260712
+  min_folds: 3
+  min_filled_trades_per_fold: 5
+  min_positive_fold_ratio: 0.6666666667
+  min_mean_return_improvement: 0.01
+  max_drawdown_floor: -0.40
+  max_drawdown_worsening: 0.05
+  max_turnover_ratio: 1.50
+  max_pnl_concentration: 0.50
+
+periods:
+  research_start: 2022-01-01
+  train_end: 2024-12-31
+  validation_start: 2025-01-01
+  validation_end: 2025-06-30
+  core_test_start: 2025-07-01
+  core_test_end: 2025-12-31
+  test_start: 2026-01-01
+  test_end:
+
+baseline:
+  train_days: 252
+  retrain_frequency: 20
+  top_n: 8
+  rebalance_frequency: 5
+  max_position_weight: 0.08
+  leverage: 0.60
+  min_score:
+  commission_bps: 1.0
+  impact_bps: 0.7
+  max_buy_open_gap: 0.05
+  limit_buffer: 0.995
+  min_close: 2.0
+  min_avg_amount_20d: 30000000
+  min_pullback_5d: 0.03
+  max_pullback_5d: 0.18
+  min_prior_return_20: 0.08
+  min_prior_return_60: 0.18
+  min_return_20d: -0.12
+  min_return_60d: 0.0
+  min_distance_ma60: -0.10
+  max_intraday_return: 0.05
+  rebound_exit_return:
+  rebound_exit_scale: 0.0
+  rebound_exit_market_exposure_max:
+  rebound_exit_market_exposure_min:
+
+search_groups:
+  - id: regime_risk_budget
+    hypothesis_cn: 仅在强势低波动且市场宽度扩张时提高风险敞口能否稳定增收
+    candidates:
+      - id: regime_075_capped
+        overrides:
+          max_position_weight: 0.12
+          regime_strong_leverage: 0.75
+          regime_exceptional_leverage: 0.75
+          regime_strong_breadth_threshold: 0.55
+          regime_exceptional_breadth_threshold: 0.70
+          regime_strong_volatility_max: 0.28
+          regime_exceptional_volatility_max: 0.20
+      - id: regime_090_balanced
+        overrides:
+          max_position_weight: 0.12
+          regime_strong_leverage: 0.75
+          regime_exceptional_leverage: 0.90
+          regime_strong_breadth_threshold: 0.55
+          regime_exceptional_breadth_threshold: 0.70
+          regime_strong_volatility_max: 0.28
+          regime_exceptional_volatility_max: 0.20
+      - id: regime_090_strict
+        overrides:
+          max_position_weight: 0.12
+          regime_strong_leverage: 0.75
+          regime_exceptional_leverage: 0.90
+          regime_strong_breadth_threshold: 0.60
+          regime_exceptional_breadth_threshold: 0.75
+          regime_strong_volatility_max: 0.24
+          regime_exceptional_volatility_max: 0.18
+  - id: entry_depth
+    hypothesis_cn: 收紧回调深度能否减少单边下跌标的
+    candidates:
+      - id: pullback_02_12
+        overrides:
+          min_pullback_5d: 0.02
+          max_pullback_5d: 0.12
+      - id: pullback_04_15
+        overrides:
+          min_pullback_5d: 0.04
+          max_pullback_5d: 0.15
+  - id: rebound_exit
+    hypothesis_cn: 强市场中的反弹退出能否改善收益回撤比
+    candidates:
+      - id: rebound_080_strong
+        overrides:
+          rebound_exit_return: 0.08
+          rebound_exit_market_exposure_min: 0.99
+      - id: rebound_085_strong
+        overrides:
+          rebound_exit_return: 0.085
+          rebound_exit_market_exposure_min: 0.99
+      - id: rebound_095_all
+        overrides:
+          rebound_exit_return: 0.095
+
+selection:
+  min_validation_days: 100
+  min_test_days: 60
+  max_drawdown_floor: -0.40
+  min_annualized_return_delta: 0.01
+  min_sharpe_delta: -0.10
+  max_turnover_ratio: 1.50
+  rolling_window_days: 63
+  max_negative_window_rate: 0.60

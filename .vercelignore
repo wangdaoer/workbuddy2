@@ -1,0 +1,6 @@
+# The quantitative research code and its scientific dependencies run locally.
+# Vercel only needs the dependency-free homepage and deployment health endpoint.
+/*
+!api
+!index.html
+!vercel.json

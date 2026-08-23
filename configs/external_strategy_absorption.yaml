@@ -1,0 +1,98 @@
+source:
+  type: x_post
+  url: "https://x.com/KKaWSB/status/2075032774906650746"
+  captured_date: "2026-07-09"
+  purpose: "absorb useful open-source quant framework practices into the local A-share daily research workflow"
+
+boundaries:
+  live_trading: false
+  broker_connection: false
+  auto_order: false
+  asset_scope: "A-share main board and ChiNext daily-bar research"
+  execution_rule: "signals after close, execute next trading day open"
+
+adopt_now:
+  - name: qlib_factor_pipeline
+    source_project: "microsoft/qlib"
+    local_meaning: "standardize factor research, rolling training, IC checks, segment reports, and promotion gates"
+    local_targets:
+      - train_next_open_rank_model.py
+      - audit_next_open_factors.py
+      - summarize_core_risk_filter_stability.py
+    promotion_gate: "must beat current base model across rolling windows, not only one backtest"
+
+  - name: jesse_no_lookahead_discipline
+    source_project: "jesse-ai/jesse"
+    local_meaning: "make no-lookahead execution discipline a hard gate for every new signal"
+    local_targets:
+      - execution_rules.py
+      - run_backtest.py
+      - run_personal_behavior_overlay_backtest.py
+    promotion_gate: "must pass tests proving no same-day open execution uses same-day unknown data"
+
+  - name: trend_breakout_family
+    source_projects:
+      - freqtrade/freqtrade
+      - Drakkar-Software/OctoBot
+    local_meaning: "separate trend, momentum, breakout, strong pullback, and hidden accumulation as strategy families"
+    local_targets:
+      - trend_state.py
+      - early_pattern_watchlist.py
+      - generate_strong_pullback_candidates.py
+      - merged_daily_outputs.py
+    promotion_gate: "family-level forward returns must improve 1d/3d/5d or reduce drawdown versus generic candidates"
+
+research_later:
+  - name: fingpt_sentiment_risk
+    source_project: "AI4Finance-Foundation/FinGPT"
+    local_meaning: "use Chinese news and announcement sentiment as risk label or candidate explanation only"
+    blocked_by:
+      - "needs reliable Chinese news source"
+      - "needs auditable sample labels"
+      - "must not become direct buy signal before validation"
+
+  - name: finrl_position_policy
+    source_project: "AI4Finance-Foundation/FinRL"
+    local_meaning: "experiment with position sizing or risk-state policy after rule-based sleeves stabilize"
+    blocked_by:
+      - "overfitting risk"
+      - "requires strict walk-forward validation"
+      - "must compare against simple risk controls"
+
+  - name: nautilus_event_driven_audit
+    source_project: "nautechsystems/nautilus_trader"
+    local_meaning: "borrow event-driven research/live consistency ideas, not the production engine yet"
+    blocked_by:
+      - "current system is daily research only"
+      - "no broker execution stage"
+
+defer:
+  - name: hummingbot_market_making
+    source_project: "hummingbot/hummingbot"
+    reason: "market making and crypto exchange execution do not match current A-share daily-bar workflow"
+
+  - name: hftbacktest_tick_execution
+    source_project: "nkaz001/hftbacktest"
+    reason: "requires tick/order-book/queue-position data, unavailable in current daily data pipeline"
+
+strategy_families:
+  - family: trend_momentum
+    description: "trend-following and momentum continuation"
+    candidate_use: "score boost and explanation tag"
+
+  - family: breakout_acceleration
+    description: "range breakout, platform breakout, and acceleration after consolidation"
+    candidate_use: "early watch and high-volatility candidate tag"
+
+  - family: strong_pullback
+    description: "strong stock pullback, second-wave launch, and lifeline support"
+    candidate_use: "satellite candidate sleeve"
+
+  - family: hidden_accumulation
+    description: "mild volume expansion, active up-day amount, slow price lift, and no single-day blowoff"
+    candidate_use: "watchlist only until forward-test evidence improves"
+
+next_steps:
+  - "add strategy_family, family_score, and family_reason columns to merged daily outputs"
+  - "build family-level forward-return report for 1d, 3d, 5d, and 10d horizons"
+  - "promote only families that remain stable across rolling windows"

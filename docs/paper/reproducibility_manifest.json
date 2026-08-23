@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "paper_status": "research_preprint_v0.1",
+  "generated_at": "2026-07-22T21:16:34",
+  "data_cutoff": "2026-07-22",
+  "repository_root": "D:\\codex\\智能化\\high_risk_quant_model3",
+  "git_commit": "ebf4a60671b8a37a34ebee80f60021c91cfb4bdf",
+  "git_branch": "main",
+  "git_status_porcelain": "M MODEL_OPERATING_SYSTEM.md\n M configs/README.md\n M configs/dynamic_breadth_overlay_preregistration.json\n M execution_rules.py\n M run_daily_model_pipeline.py\n M tests/test_daily_model_pipeline.py\n M tests/test_dynamic_breadth_overlay.py\n M tests/test_execution_rules.py\n M track_dynamic_breadth_overlay.py\n M train_next_open_rank_model.py\n?? analyze_incumbent_attribution.py\n?? configs/daily_risk_response_preregistration_20260722.json\n?? configs/hybrid_pullback_preregistration_20260722.json\n?? configs/incumbent_capacity_stress_preregistration_20260722.json\n?? configs/prelive_gf_manual.yaml\n?? configs/trend_gated_pullback_preregistration_20260722.json\n?? docs/daily_risk_response_challenger_20260722.md\n?? docs/horizon_alignment_research_20260722.md\n?? docs/hybrid_pullback_attribution_research_20260722.md\n?? docs/incumbent_attribution_20260722.md\n?? docs/incumbent_capacity_stress_20260722.md\n?? docs/paper/\n?? docs/signal_sleeve_split_research_20260722.md\n?? docs/trend_gated_pullback_research_20260722.md\n?? market_risk.py\n?? prelive_account_shadow.py\n?? prelive_order_draft.py\n?? run_daily_risk_response_challenger.py\n?? run_incumbent_capacity_stress.py\n?? tests/test_daily_risk_response_challenger.py\n?? tests/test_incumbent_attribution.py\n?? tests/test_incumbent_capacity_stress.py\n?? tests/test_market_risk.py\n?? tests/test_prelive_account_shadow.py\n?? tests/test_prelive_order_draft.py\n?? tests/test_train_next_open_rank_model.py\n?? tmp/",
+  "data_panel": {
+    "path": "D:\\codex\\智能化\\high_risk_quant_model3\\data_panel_history_main_chinext_20220101_20260722.parquet",
+    "size_bytes": 85608906,
+    "row_count": 4841868,
+    "symbol_count": 4600,
+    "date_count": 1102,
+    "date_min": "2022-01-04",
+    "date_max": "2026-07-22",
+    "note": "Large panel hash intentionally omitted; authoritative daily source and run-card hashes are retained separately."
+  },
+  "inputs": {
+    "train_next_open_rank_model.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\train_next_open_rank_model.py",
+      "size_bytes": 34970,
+      "sha256": "78730cde516b3bfc33d9b4be35ef0a999a31c185627ab0510e18993d70da2189"
+    },
+    "market_risk.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\market_risk.py",
+      "size_bytes": 5204,
+      "sha256": "26c0d7336a86d138bfa7490db676032342915a5892536b37e58439ae03798fe0"
+    },
+    "execution_rules.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\execution_rules.py",
+      "size_bytes": 10766,
+      "sha256": "21c6022726961a7cba642feb12c4d40f25f4f73276bffecbe05382dcff9ac85a"
+    },
+    "prelive_order_draft.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\prelive_order_draft.py",
+      "size_bytes": 41264,
+      "sha256": "4cb1648a4d916a3b4921b280f31cf78f2df8684783e317e4dbec55267c58bff8"
+    },
+    "prelive_account_shadow.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\prelive_account_shadow.py",
+      "size_bytes": 43859,
+      "sha256": "72bf32dfdbbe14906431651dd0ca6c20d3dc281e62a6591b6e78957919a5c553"
+    },
+    "configs\\prelive_gf_manual.yaml": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\configs\\prelive_gf_manual.yaml",
+      "size_bytes": 2039,
+      "sha256": "4f9f7978fbaf8c3098bf5f5dc63f337aca3b3c8a9d73dc19f2837f30d23aa18c"
+    },
+    "outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\metrics.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\metrics.json",
+      "size_bytes": 1857,
+      "sha256": "d0a7e1065819cb16e6b5ab48241ca08857bb76d822639e8a2b923ac96815bfa1"
+    },
+    "outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\equity_curve.csv": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\equity_curve.csv",
+      "size_bytes": 171374,
+      "sha256": "7bc0f69515683a74035081984a2d3ccf672b452b0d79f42483a98892940ecd0e"
+    },
+    "outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\rolling_feature_weights.csv": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\next_open_rank_model_stock_focus_lev093_marketfilter_bench20260722_20220101_20260722\\rolling_feature_weights.csv",
+      "size_bytes": 14128,
+      "sha256": "5f9e7431e5ae8e139821dda382822ec0568078dd38defa63b166a87f3486a56d"
+    },
+    "outputs\\high_return_v2\\daily_run_card_20260722.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\daily_run_card_20260722.json",
+      "size_bytes": 63489,
+      "sha256": "cb7802589d0137bbef8c5918cd2f588c4b44fb68783999b54edfe357a622e418"
+    },
+    "outputs\\high_return_v2\\prelive_order_draft_20260722.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\prelive_order_draft_20260722.json",
+      "size_bytes": 3115,
+      "sha256": "152f570c2e6c07935d6bfb5d893d0396921d8def84e560af5ca70133fbb0980b"
+    },
+    "outputs\\high_return_v2\\regime_shadow_tracking_summary.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\regime_shadow_tracking_summary.json",
+      "size_bytes": 1231,
+      "sha256": "f99b474b55737df1f590319a17c2a9ddf979e7c5c8bedd2f264d7ba19c99c2b7"
+    },
+    "outputs\\high_return_v2\\dynamic_breadth_overlay_tracking_summary.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\outputs\\high_return_v2\\dynamic_breadth_overlay_tracking_summary.json",
+      "size_bytes": 1444,
+      "sha256": "c06f171aa88ee489f0f923d4af35c50e742b1fc5eaf529dbc6c3912eeb500034"
+    },
+    "docs\\paper\\appendix\\figure_data_profile.json": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\appendix\\figure_data_profile.json",
+      "size_bytes": 3197,
+      "sha256": "6329ddc99affb83e3b5139cbbc767ed9b200ba82ef043b0064e2d2791c85e056"
+    },
+    "docs\\paper\\build_figures.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\build_figures.py",
+      "size_bytes": 9981,
+      "sha256": "8553c54628d6a2beda5445b2e0957100dd73de853ef81380e18b9f8e9be16e2f"
+    },
+    "docs\\paper\\build_paper.py": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\build_paper.py",
+      "size_bytes": 57268,
+      "sha256": "2634c67c03e02333b6709b69069a428ccb8d3a3ffddeee149f73f4d2c3721c21"
+    }
+  },
+  "deliverables": {
+    "quant_strategy_paper_cn.md": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\quant_strategy_paper_cn.md",
+      "size_bytes": 7319,
+      "sha256": "9141f1fd793675d463bf8a7552c2607654e5a135b58da6bb469e8a6a9bb7dd05"
+    },
+    "quant_strategy_paper_cn.docx": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\quant_strategy_paper_cn.docx",
+      "size_bytes": 417941,
+      "sha256": "ab9b13a1de86899aa4601e896f112f9d6eb2062502e81832d5fc5efcec6123c0"
+    },
+    "quant_strategy_paper_cn.pdf": {
+      "path": "D:\\codex\\智能化\\high_risk_quant_model3\\docs\\paper\\quant_strategy_paper_cn.pdf",
+      "size_bytes": 1078808,
+      "sha256": "2dd7166624ce4dc2fe4b48435605ab85c6d04c724fa31ac69451074732953f5b"
+    }
+  },
+  "evidence_boundary": {
+    "historical_backtest": true,
+    "fresh_out_of_sample_alpha_complete": false,
+    "exact_account_forward_execution_days": 0,
+    "trade_instruction": false,
+    "broker_order_allowed": false
+  },
+  "manifest_finalized_at": "2026-07-22T21:18:09"
+}

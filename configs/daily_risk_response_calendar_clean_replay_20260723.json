@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "registered_at": "2026-07-23",
+  "experiment_id": "incumbent_daily_decrease_only_calendar_clean_replay_20260723",
+  "status": "calendar_clean_replay_preregistered",
+  "purpose": "Replay the unchanged daily decrease-only risk rule after removing the non-trading 2026-06-19 panel row.",
+  "sample_disclosure": "corrective replay on previously observed history; not fresh out-of-sample alpha evidence",
+  "baseline": {
+    "initial_capital": 1000000.0,
+    "total_return": 0.2585920919496223,
+    "annualized_return": 0.07091001073676906,
+    "max_drawdown": -0.28261666997815194,
+    "sharpe_like": 0.43810637634144417,
+    "avg_turnover": 0.29344468085106384,
+    "avg_gross_exposure": 0.7853333333333331,
+    "risk_zero_target_non_rebalance_with_positions_sessions": 1
+  },
+  "calendar_correction": {
+    "supersedes_experiment": "incumbent_daily_decrease_only_risk_response_20260722",
+    "removed_non_session_date": "2026-06-19",
+    "removed_rows": 4579,
+    "original_baseline_total_return": 0.2770555477137875,
+    "rule_or_gate_changed": false
+  },
+  "candidate_contract": {
+    "risk_rebalance_policy": "daily_decrease_only",
+    "alpha_rebalance_frequency": 5,
+    "signal_information_cutoff": "signal_date_close",
+    "execution_time": "next_open",
+    "trigger": "non_scheduled_session_when_market_exposure_target_falls_below_running_ceiling_since_last_scheduled_rebalance",
+    "target": "proportionally_reduce_existing_long_positions_toward_scheduled_pre_overlay_gross_times_running_exposure_ceiling",
+    "risk_only_buys_allowed": false,
+    "restore_exposure_before_next_scheduled_rebalance": false,
+    "retry_constraint_blocked_risk_sells_daily": true,
+    "open_constraints_and_costs_unchanged": true,
+    "capacity_constraint_enabled": false
+  },
+  "fixed_strategy": {
+    "sleeve": "unconstrained",
+    "training_horizons": [1],
+    "train_days": 252,
+    "retrain_frequency": 20,
+    "rebalance_frequency": 5,
+    "top_n": 40,
+    "max_position_weight": 0.029,
+    "leverage": 0.93,
+    "commission_bps": 1.0,
+    "impact_bps": 0.7,
+    "benchmark": "510300",
+    "market_ma_window": 120,
+    "market_below_ma_exposure": 0.6,
+    "market_risk_off_drawdown_20d": -0.08,
+    "market_crash_exposure": 0.0
+  },
+  "sequential_acceptance_gates": {
+    "operational": {
+      "min_risk_rebalance_attempt_sessions": 1,
+      "max_unattempted_zero_target_sessions": 0,
+      "max_unexplained_zero_target_residual_sessions": 0
+    },
+    "performance": {
+      "min_total_return_retention_vs_baseline": 0.95,
+      "min_annualized_return": 0.0,
+      "max_drawdown_degradation": 0.005,
+      "min_sharpe_retention_vs_baseline": 0.9,
+      "max_average_turnover_increase": 0.01
+    }
+  },
+  "decision_policy": "passing all unchanged gates qualifies only for prospective shadow observation; production promotion remains manual and requires new forward evidence",
+  "research_only": true,
+  "trade_instruction": false,
+  "automatic_model_change": false
+}
