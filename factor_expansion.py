@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 
 from train_next_open_rank_model import build_features, rank_pct
+from wq_alpha_factors import build_wq_alpha_factors
+from alpha158_factors import build_alpha158_factors
 
 
 def _safe_ratio(num: pd.DataFrame, den: pd.DataFrame) -> pd.DataFrame:
@@ -84,3 +86,38 @@ def build_features_expanded(
         for name, frame in new.items()}
 
     return {**base, **ranked_new}
+
+
+def build_features_expanded_wq(
+    close: pd.DataFrame,
+    open_px: pd.DataFrame,
+    high: pd.DataFrame,
+    low: pd.DataFrame,
+    amount: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    """三套因子合并：base(16) + expansion(13) + wq_alpha(精选 WQ101 子集)。
+
+    非破坏式：base / expansion 原样保留，wq_alpha 作为扩张候选追加。
+    新因子由 run_walk_forward 的 IC>0 自适应选择自动挑选有效者，不强制进入生产集。
+    """
+    expanded = build_features_expanded(close, open_px, high, low, amount)
+    wq = build_wq_alpha_factors(close, open_px, high, low, amount)
+    return {**expanded, **wq}
+
+
+def build_features_expanded_wq158(
+    close: pd.DataFrame,
+    open_px: pd.DataFrame,
+    high: pd.DataFrame,
+    low: pd.DataFrame,
+    amount: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    """四套因子合并：base(16) + expansion(13) + wq_alpha(19) + alpha158(157)。
+
+    非破坏式：base / expansion / wq 原样保留，alpha158 作为扩张候选追加。
+    全部 rank 化同尺度，交由 run_walk_forward 的 IC>0 自适应选择自动挑选有效者。
+    用途：与 build_features_expanded_wq 做 walk-forward A/B，量化 Alpha158 的 next_open 增量。
+    """
+    expanded_wq = build_features_expanded_wq(close, open_px, high, low, amount)
+    a158 = build_alpha158_factors(close, open_px, high, low, amount)
+    return {**expanded_wq, **a158}
