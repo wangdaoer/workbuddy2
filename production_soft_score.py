@@ -37,6 +37,7 @@ from p10c_ensemble import (
     TRAIN_DAYS, MTH, LIQ_LOOKBACK, THR as LIQ_THR, RETRAIN,
 )
 import pit_universe as pit
+from wq_alpha_factors import build_wq_alpha_factors  # [并入] WQ101 因子吸收（2026-08-26）
 from score_cache import load_or_build  # 内容寻址缓存守卫（根治换面板形状错）
 
 HERE = Path(__file__).resolve().parent
@@ -77,7 +78,7 @@ THR_LO = 0.0
 EXPOSURE_FLOOR = 0.25
 
 
-def build_panel(panel_csv: Path):
+def build_panel(panel_csv: Path, use_wq: bool = False):
     raw = load_prices(panel_csv, None, None)
     close = clean_matrix(pivot_prices(raw, "close"), MAX_ABS)
     open_px = clean_matrix(pivot_prices(raw, "open").reindex_like(close), MAX_ABS)
@@ -86,6 +87,14 @@ def build_panel(panel_csv: Path):
     amount = pivot_prices(raw, "amount").reindex_like(close)
     symbols = list(close.columns)
     features = build_features(close, open_px, high, low, amount)
+    if use_wq:
+        # [并入] WQ101 因子吸收（2026-08-26，非破坏式）：追加 19 个 PIT 安全 wq_* 因子。
+        # 生产走 build_linear_mlp_scores 的 select_positive(IC>0) 自适应入选，故仅正向 wq 因子参与。
+        # 注：宽松 walk-forward(feature_selection=None) 曾显示 +0.135 sharpe 假阳性；真实生产配置
+        # (select_positive) 实测 WQ 净增量 -0.329 sharpe(0.410 vs 0.739)，故默认关闭(--wq opt-in)。
+        # build_features 本身未改动，其余 ~40 个调用方不受影响。
+        wq_feats = build_wq_alpha_factors(close, open_px, high, low, amount)
+        features = {**features, **wq_feats}
     label = next_open_return_label(open_px, max_abs_daily_return=MAX_ABS)
     market_exposure = load_market_exposure(None, close.index, ma_window=120, risk_off_drawdown_20d=-0.08, below_ma_exposure=0.60, crash_exposure=0.0)
     roll_med = amount.rolling(LIQ_LOOKBACK, min_periods=LIQ_LOOKBACK).median()
@@ -289,7 +298,8 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
                        universe: str = "pit", start_date: str | None = None,
                        refresh_live_daily: bool = False,
                        scores_npz: Path | None = None,
-                       watchlist_mask_dir: str | None = None
+                       watchlist_mask_dir: str | None = None,
+                       use_wq: bool = False
                        ) -> tuple[pd.DataFrame, dict, pd.DataFrame | None]:
     """生产入口：返回 (soft_score, regime_report, book_equity)。
 
@@ -310,7 +320,7 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
       - "regime_gross": 仅把 regime 的 gross 降权(0.40)写进回测，top_n 固定。
       - "joint"       : regime->gross 降权 + top_n 按容量余量动态下调（dead 收窄到 20~40）。默认。
     """
-    P = build_panel(panel_csv)
+    P = build_panel(panel_csv, use_wq=use_wq)
 
     # --- 候选宇宙分支（根治"筛选后自选股"前视，对应 option 2：point-in-time 框架） ---
     # PIT 掩码在每个再平衡日 t 只用 ≤t 信息判合格（上市/未退市/未停牌/trailing 流动性/最小历史），
@@ -504,6 +514,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="实验变体：非 retrain 日按当日流动性刷新 live 集（解决覆盖错位；默认关=生产行为不变）")
     parser.add_argument("--scores-npz", default=None,
                         help="分数缓存路径覆盖（实验变体用独立缓存，避免与默认宇宙 npz 串味）")
+    parser.add_argument("--wq", action="store_true",
+                        help="启用 WQ101 因子并入（A/B 实验：在 base 因子之上叠加 19 个 wq_* 因子；默认关闭，验证显示其净增量为负）")
     parser.add_argument("--watchlist-mask-dir", default=None,
                         help="watchlist 宇宙掩码目录覆盖（默认 outputs/watchlist_audit；聚焦实验用独立掩码）")
     args = parser.parse_args(argv)
@@ -517,8 +529,11 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.panel), BOOK_AUM, schedule=args.schedule, universe=args.universe,
         use_cache=True, skip_backtest=args.skip_backtest, start_date=args.start_date,
         refresh_live_daily=args.refresh_live_daily,
-        scores_npz=Path(args.scores_npz) if args.scores_npz else None,
-        watchlist_mask_dir=args.watchlist_mask_dir)
+        scores_npz=(Path(args.scores_npz) if args.scores_npz
+                    else (P10E / f"linear_mlp_scores_{args.universe}_wq.npz") if args.wq
+                    else None),
+        watchlist_mask_dir=args.watchlist_mask_dir,
+        use_wq=args.wq)
     alert = regime_alert(rep)
 
     if args.monitor:
