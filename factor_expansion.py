@@ -14,6 +14,7 @@ import pandas as pd
 from train_next_open_rank_model import build_features, rank_pct
 from wq_alpha_factors import build_wq_alpha_factors
 from alpha158_factors import build_alpha158_factors
+from broker_mined_factors import build_broker_mined_factors
 
 
 def _safe_ratio(num: pd.DataFrame, den: pd.DataFrame) -> pd.DataFrame:
@@ -121,3 +122,38 @@ def build_features_expanded_wq158(
     expanded_wq = build_features_expanded_wq(close, open_px, high, low, amount)
     a158 = build_alpha158_factors(close, open_px, high, low, amount)
     return {**expanded_wq, **a158}
+
+
+def build_features_expanded_broker(
+    close: pd.DataFrame,
+    open_px: pd.DataFrame,
+    high: pd.DataFrame,
+    low: pd.DataFrame,
+    amount: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    """券商研报因子吸收合并：base(16) + expansion(13) + brk_*(19)。
+
+    非破坏式：base / expansion 原样保留，brk_ 研报因子作为扩张候选追加。
+    全部 rank 化同尺度，交由 run_walk_forward 的 select_positive(IC>0) 自适应挑选有效者。
+    用途：与 build_features_expanded（生产基线）做 walk-forward A/B，量化研报因子的 next_open 增量。
+    """
+    expanded = build_features_expanded(close, open_px, high, low, amount)
+    brk = build_broker_mined_factors(close, open_px, high, low, amount)
+    return {**expanded, **brk}
+
+
+def build_features_expanded_wq158brk(
+    close: pd.DataFrame,
+    open_px: pd.DataFrame,
+    high: pd.DataFrame,
+    low: pd.DataFrame,
+    amount: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    """五套因子全集合并：base+exp+wq+alpha158+brk，用于券商研报因子并入 alpha158 后的总增量 A/B。
+
+    非破坏式：各子集原样保留，brk_ 研报因子作为扩张候选追加。
+    仅作验证用途（量化 brk 在已含 Alpha158 扩张集上的边际增量）；默认生产路径不启用。
+    """
+    expanded_wq158 = build_features_expanded_wq158(close, open_px, high, low, amount)
+    brk = build_broker_mined_factors(close, open_px, high, low, amount)
+    return {**expanded_wq158, **brk}
