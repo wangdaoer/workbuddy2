@@ -1,19 +1,19 @@
-"""walk-forward 增量验证：base+exp+wq(53) vs base+exp+wq+alpha158(210)。
+"""walk-forward 增量验证（决策相关版）：base+exp+broker(50) vs base+exp+broker+alpha158(~207)。
 
-只读诊断：不改动任何生产文件。与 wf_incremental_wq.py 衔接——
-wq 那层已并入 base+exp，本脚本在"已含 wq"的宇宙上隔离 alpha158 的增量贡献。
+只读诊断：不改动任何生产文件。
 
-两路使用同一套生产回测配置（pit 诚实宇宙 / sqrt 冲击 / 万三佣金 / 印花税 / top_n=40 / rebalance=5），
-仅因子集不同，故 equity delta 纯归因 alpha158 因子吸收。
+为什么需要这一版：
+- 当前生产默认栈 = base+exp+broker（WQ 是 opt-in，不在默认）；
+  之前 wf_incremental_alpha158.py 测的是 base+exp+wq 栈，对"是否并入生产默认"针对性有偏差。
+- 本脚本直接在生产默认栈上隔离 alpha158 的边际贡献，Δ 即为"并入默认"的决策指标。
 
-⚠️ 关键纪律（沿用 WQ 教训）：feature_selection 必须用生产同款 select_positive(IC>0)
-   自适应机制，绝不用 feature_selection=None（后者强制全部因子入选，会虚高假阳性）。
-   本脚本此前（2026-08-26）用 None 跑出 Δ≈−0.002 的结论不可信，本次以 select_positive 重跑纠正。
+⚠️ 关键纪律（沿用 WQ 教训）：feature_selection 必须用生产同款 select_positive(IC>0)，
+   绝不用 feature_selection=None（后者强制全部因子入选，会虚高假阳性）。
 
 产出：
-- outputs/wf_incremental_alpha158/report.json
-- outputs/wf_incremental_alpha158/equity_A.csv / equity_B.csv
-- outputs/wf_incremental_alpha158/weights_B.csv
+- outputs/wf_incremental_alpha158_brokerstack/report.json
+- outputs/wf_incremental_alpha158_brokerstack/equity_A.csv / equity_B.csv
+- outputs/wf_incremental_alpha158_brokerstack/weights_B.csv
 """
 from __future__ import annotations
 
@@ -30,12 +30,13 @@ sys.path.insert(0, str(ROOT))
 
 import train_next_open_rank_model as tm
 import factor_expansion as fe
+import alpha158_factors as a158
 from production_soft_score import build_panel
 import pit_universe as pit
 from p10c_ensemble import TRAIN_DAYS, MTH, RETRAIN, IMPACT_REF, select_positive
 
 PANEL = ROOT / "external_data" / "daily-market-data" / "data_panel.csv"
-OUT = ROOT / "outputs" / "wf_incremental_alpha158"
+OUT = ROOT / "outputs" / "wf_incremental_alpha158_brokerstack"
 OUT.mkdir(parents=True, exist_ok=True)
 
 COMMISSION_BPS = 3.0
@@ -84,25 +85,26 @@ def run_wf(features: dict, tag: str):
     return eq, wdf, m
 
 
-# ---------- A: base + expansion + wq ----------
-log("build features A (base+exp+wq) ...")
-feA = fe.build_features_expanded_wq(close, open_px, high, low, amount)
+# ---------- A: base + expansion + broker（= 当前生产默认栈） ----------
+log("build features A (base+exp+broker) ...")
+feA = fe.build_features_expanded_broker(close, open_px, high, low, amount)
 log(f"A features={len(feA)}  t={time.time() - t0:.1f}s")
-log("WALK-FORWARD A ...")
+log("WALK-FORWARD A (select_positive) ...")
 eqA, wA, mA = run_wf(feA, "A")
 log(f"A done: sharpe={mA.get('sharpe_like'):.3f} ret={mA.get('total_return'):.4f} "
     f"dd={mA.get('max_drawdown'):.4f}  t={time.time() - t0:.1f}s")
 
-# ---------- B: base + expansion + wq + alpha158 ----------
-log("build features B (base+exp+wq+alpha158) ...")
-feB = fe.build_features_expanded_wq158(close, open_px, high, low, amount)
+# ---------- B: base + expansion + broker + alpha158（并入默认候选） ----------
+log("build features B (base+exp+broker+alpha158) ...")
+a158_feats = a158.build_alpha158_factors(close, open_px, high, low, amount)
+feB = {**feA, **a158_feats}
 log(f"B features={len(feB)}  t={time.time() - t0:.1f}s")
-log("WALK-FORWARD B ...")
+log("WALK-FORWARD B (select_positive) ...")
 eqB, wB, mB = run_wf(feB, "B")
 log(f"B done: sharpe={mB.get('sharpe_like'):.3f} ret={mB.get('total_return'):.4f} "
     f"dd={mB.get('max_drawdown'):.4f}  t={time.time() - t0:.1f}s")
 
-# ---------- 增量对比 ----------
+# ---------- 增量对比（仅取实际入选列，规避 select_positive 排除） ----------
 a158_names = [n for n in feB if n.startswith("a158_") and n in wB.columns]
 a158_w = wB[a158_names]
 a158_stats = {
@@ -121,19 +123,20 @@ non_a158_abs = wB[non_a158].abs().mean().sum()
 a158_abs_total = float(pd.Series({n: a158_stats[n]["mean_abs_weight"] for n in a158_names}).sum())
 a158_share = float(a158_abs_total / (non_a158_abs + a158_abs_total)) if (non_a158_abs + a158_abs_total) > 0 else 0.0
 
-# 与 wq 层结论联动：A 路（已含 wq）的指标即 wq 层 B 路
 report = {
     "config": {
         "universe": "pit", "train_days": TRAIN_DAYS, "retrain": RETRAIN,
         "rebalance": REBALANCE, "top_n": BOOK_TOP_N, "max_w": BOOK_MAX_W,
         "adv_p": BOOK_ADV_P, "commission_bps": COMMISSION_BPS,
         "impact_bps": IMPACT_BPS, "stamp_bps": STAMP_TAX_BPS,
-        "feature_selection": "select_positive(IC>0)  # 生产同款，非 None", "n_A": len(feA), "n_B": len(feB),
+        "feature_selection": "select_positive(IC>0)  # 生产同款，非 None",
+        "stack": "base+exp+broker (生产默认栈)",
+        "n_A": len(feA), "n_B": len(feB),
     },
-    "A_base_exp_wq": {k: mA.get(k) for k in (
+    "A_base_exp_broker": {k: mA.get(k) for k in (
         "sharpe_like", "total_return", "annualized_return", "max_drawdown",
         "avg_turnover", "avg_positions_count", "trade_days")},
-    "B_base_exp_wq_a158": {k: mB.get(k) for k in (
+    "B_base_exp_broker_a158": {k: mB.get(k) for k in (
         "sharpe_like", "total_return", "annualized_return", "max_drawdown",
         "avg_turnover", "avg_positions_count", "trade_days")},
     "delta": {k: (mB.get(k) - mA.get(k)) for k in (
@@ -143,26 +146,25 @@ report = {
     "a158_factor_weight_stats": a158_stats,
     "a158_factor_mean_ic": a158_ic,
 }
-
 (OUT / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False))
 eqA.to_csv(OUT / "equity_A.csv", index=False)
 eqB.to_csv(OUT / "equity_B.csv", index=False)
 wB.to_csv(OUT / "weights_B.csv", index=False)
 
 print("\n" + "=" * 64)
-print("WALK-FORWARD 增量验证（alpha158 因子吸收，select_positive 真实配置）")
+print("WALK-FORWARD 增量验证（alpha158 on 生产默认栈 broker，select_positive）")
 print("=" * 64)
-print(f"A base+exp+wq (n={len(feA)}): sharpe={mA['sharpe_like']:.3f}  "
+print(f"A base+exp+broker       (n={len(feA)}): sharpe={mA['sharpe_like']:.3f}  "
       f"ret={mA['total_return']:.3f}  dd={mA['max_drawdown']:.3f}")
-print(f"B +a158      (n={len(feB)}): sharpe={mB['sharpe_like']:.3f}  "
+print(f"B +a158                 (n={len(feB)}): sharpe={mB['sharpe_like']:.3f}  "
       f"ret={mB['total_return']:.3f}  dd={mB['max_drawdown']:.3f}")
-print(f"DELTA               : sharpe={report['delta']['sharpe_like']:+.3f}  "
+print(f"DELTA                         : sharpe={report['delta']['sharpe_like']:+.3f}  "
       f"ret={report['delta']['total_return']:+.3f}  dd={report['delta']['max_drawdown']:+.3f}")
 print(f"\nalpha158 因子在 B 投资组合权重中的平均占比（|weight|）: {a158_share * 100:.1f}%")
 print("-" * 64)
-print("alpha158 因子权重/IC（按 |mean_weight| 降序，前 30）")
+print("alpha158 因子权重/IC（按 |mean_weight| 降序，前 20）")
 print(f"{'factor':30s} {'wmean':>9s} {'pctPos':>7s} {'IC':>8s}")
-for n in sorted(a158_names, key=lambda x: -abs(a158_stats[x]["mean_weight"]))[:30]:
+for n in sorted(a158_names, key=lambda x: -abs(a158_stats[x]["mean_weight"]))[:20]:
     s = a158_stats[n]
     print(f"{n:30s} {s['mean_weight']:+.4f} {s['pct_positive']:6.1f}% {a158_ic[n]:+.4f}")
 print("-" * 64)
