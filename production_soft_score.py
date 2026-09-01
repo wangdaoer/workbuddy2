@@ -170,8 +170,10 @@ def causal_soft_blend(linear_score: pd.DataFrame, mlp_score: pd.DataFrame,
     #   即 IC 不是组合层表现的可靠代理：IC 是全宇宙秩相关而组合只取 top_n；两个部分去相关的
     #   信号叠加有分散化收益；且 regime 闸门用 MLP 的 trailing IC，换分数会造成闸门与分数错配。
     #
-    # 真正的病根是【欠训练】，正确解法是喂更多数据（现默认 cap=30000/iters=400），
-    # 而非砍掉 MLP 权重。强化后生产 sharpe 0.787 -> 1.044。
+    # 真正的病根是【欠训练】，正确解法是喂更多数据/迭代
+    #   （2026-09-02 起默认 cap=60000/iters=800，此前一档为 30000/400）。
+    #   而非砍掉 MLP 权重。强化后生产 sharpe 0.787 -> 1.131。
+    #   关键：杠杆是【迭代次数】而非数据量——150000/300 反而比 30000/400 差。
     #
     # 注意：trailing（regime 闸门信号）不受此开关影响，仍由 MLP IC 驱动，保证 A/B 只改一处。
     mlp_w = (1.0 - adv).clip(upper=mlp_max_w)
@@ -581,12 +583,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="MLP 分支权重上限 [0,1]，默认 1.0 = 旧行为。诊断显示 MLP 的 OOS IC 仅 "
                              "+0.0204 而线性 +0.0604，混合使合成分 IC 相对纯线性损失 17.9%%；"
                              "设 0 即退化为纯线性（A/B 用，regime 闸门信号不受影响）")
-    parser.add_argument("--mlp-cap", type=int, default=30000, metavar="N",
-                        help="MLP 单次训练样本上限。默认 30000（2026-09-01 由 8000 上调：原值仅为可用量的 "
-                             "<1%%，属严重欠训练。A/B 生产路线 sharpe 0.787->1.044）。"
-                             "传 8000 可还原旧行为")
-    parser.add_argument("--mlp-iters", type=int, default=400, metavar="N",
-                        help="MLP 训练迭代数。默认 400（2026-09-01 由 150 上调，同上 A/B）。传 150 可还原旧行为")
+    parser.add_argument("--mlp-cap", type=int, default=60000, metavar="N",
+                        help="MLP 单次训练样本上限。默认 60000（2026-09-02 由 30000 上调，"
+                             "原始 8000 仅为可用量的 <1%%，属严重欠训练）。"
+                             "注意：单独加大 cap 而不同步加大 iters 会适得其反"
+                             "（150000/300 反而劣于 30000/400）。传 8000 可还原最初行为")
+    parser.add_argument("--mlp-iters", type=int, default=800, metavar="N",
+                        help="MLP 训练迭代数。默认 800（2026-09-02 由 400 上调；"
+                             "A/B 表明这是主要杠杆：60000/400->60000/800 使 sharpe 1.297->1.348"
+                             "且回撤 -0.157->-0.117）。传 150 可还原最初行为")
     parser.add_argument("--mlp-hid", type=int, default=16, metavar="N",
                         help="MLP 隐层宽度（默认 16）")
     parser.add_argument("--watchlist-mask-dir", default=None,
