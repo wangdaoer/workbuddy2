@@ -98,7 +98,7 @@ class MLP:
 
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P8B = HERE / "outputs" / "p8b_dynamic_liquidity" / "metrics.json"
 OUT = HERE / "outputs" / "p10c_ensemble"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -152,7 +152,9 @@ def decompose_cost(eq: pd.DataFrame) -> dict:
 
 
 def build_linear_mlp_scores(features, label, symbols, feat_arrays, label_arr, liquid_mask_aligned,
-                            refresh_live_daily: bool = False):
+                            refresh_live_daily: bool = False,
+                            mlp_hid: int = 16, mlp_lr: float = 0.05,
+                            mlp_iters: int = 150, mlp_cap: int = 8000):
     """统一 walk-forward 循环：每个 retrain 点复用 retrain 当日 live 集，产出线性综合分与 MLP 分。
 
     在每个 retrain 点：用 retrain 当日 live 集对**成熟窗口分片**计算 IC（与 run_walk_forward
@@ -208,7 +210,8 @@ def build_linear_mlp_scores(features, label, symbols, feat_arrays, label_arr, li
                     continue
                 Xs.append(row[mask])
                 ys.append(yt[mask])
-            mlp_fit = MLP().fit(np.vstack(Xs), np.concatenate(ys)) if Xs else None
+            mlp_fit = (MLP(hid=mlp_hid, lr=mlp_lr, iters=mlp_iters, cap=mlp_cap)
+                       .fit(np.vstack(Xs), np.concatenate(ys)) if Xs else None)
             retrain_count += 1
             if retrain_count % 10 == 0:
                 log(f"  retrain {retrain_count} @ {date.date()} ({time.time()-t0:.0f}s 累计)")

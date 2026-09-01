@@ -34,7 +34,7 @@ from p10c_ensemble import TRAIN_DAYS, MTH, LIQ_LOOKBACK, THR as LIQ_THR, RETRAIN
 from production_soft_score import build_panel, causal_soft_blend, SCORES_NPZ
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 OUT = HERE / "outputs" / "p10i_joint_scheduling"
 OUT.mkdir(parents=True, exist_ok=True)
 

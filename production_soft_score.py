@@ -39,10 +39,18 @@ from p10c_ensemble import (
 import pit_universe as pit
 from wq_alpha_factors import build_wq_alpha_factors  # [并入] WQ101 因子吸收（2026-08-26）
 from broker_mined_factors import build_broker_mined_factors  # [并入] 券商研报因子吸收（2026-08-26）
+from alpha158_factors import build_alpha158_factors  # [opt-in] QLib Alpha158（2026-08-31，默认不并入）
 from score_cache import load_or_build  # 内容寻址缓存守卫（根治换面板形状错）
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+# 权威面板 = 合并面板（Tdx 历史主体 + 腾讯自选股近期尾巴，重叠日后者覆盖），由
+# merge_panel_sources.py 生成、daily_panel_refresh.py 每日刷新。
+# ⚠️ 2026-08-31 修正：此处原指向 daily-market-data-tdx（纯 TDX 快照，仅 880 日、
+# 末日 2026-07-23，比当日落后约 25 个交易日），系 12ff980 首次导入时的遗留默认值，
+# 合并管线建成后未同步。导致任何未显式传 --panel 的调用（如 run_daily_model_pipeline.py
+# 的两处）都静默跑在落后约一个月的陈旧数据上。其余 10+ 个脚本（daily_panel_refresh /
+# build_dashboard / diagnose_* / run_daily_overlay 显式传参）用的都是合并面板。
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P10E = HERE / "outputs" / "p10e_regime_gated"
 SCORES_NPZ = P10E / "linear_mlp_scores.npz"
 OUT = HERE / "outputs" / "production_soft_score"
@@ -79,7 +87,8 @@ THR_LO = 0.0
 EXPOSURE_FLOOR = 0.25
 
 
-def build_panel(panel_csv: Path, use_wq: bool = False, use_broker: bool = False):
+def build_panel(panel_csv: Path, use_wq: bool = False, use_broker: bool = False,
+                use_a158: bool = False):
     raw = load_prices(panel_csv, None, None)
     close = clean_matrix(pivot_prices(raw, "close"), MAX_ABS)
     open_px = clean_matrix(pivot_prices(raw, "open").reindex_like(close), MAX_ABS)
@@ -106,6 +115,16 @@ def build_panel(panel_csv: Path, use_wq: bool = False, use_broker: bool = False)
         # 仅生产入口默认开启，避免波及其余 ~40 个调用方。
         brk_feats = build_broker_mined_factors(close, open_px, high, low, amount)
         features = {**features, **brk_feats}
+    if use_a158:
+        # [opt-in] QLib Alpha158 因子（2026-08-31，非破坏式，默认关闭）：追加 157 个 a158_* 因子。
+        # 同样仅经 select_positive(IC>0) 自适应入选的正向因子参与训练/回测。
+        # 验证结论（select_positive 真实配置，双栈对照）：
+        #   - WQ 栈 (base+exp+wq): A sharpe +0.119 -> B -0.090，Δ=-0.208（显著负）
+        #   - broker 栈 (生产默认 base+exp+broker): A +0.142 -> B +0.152，Δ=+0.010（噪声级）
+        #     且回撤恶化 -0.230 -> -0.260；WQ 栈下 a158 霸占组合 77.5% 权重（与原栈高度冗余/共线）。
+        # 两路均无可靠正向净增量 -> 不并入生产默认，仅保留 opt-in（--a158）供平铺叠加实验。
+        a158_feats = build_alpha158_factors(close, open_px, high, low, amount)
+        features = {**features, **a158_feats}
     label = next_open_return_label(open_px, max_abs_daily_return=MAX_ABS)
     market_exposure = load_market_exposure(None, close.index, ma_window=120, risk_off_drawdown_20d=-0.08, below_ma_exposure=0.60, crash_exposure=0.0)
     roll_med = amount.rolling(LIQ_LOOKBACK, min_periods=LIQ_LOOKBACK).median()
@@ -121,7 +140,8 @@ def build_panel(panel_csv: Path, use_wq: bool = False, use_broker: bool = False)
 
 def causal_soft_blend(linear_score: pd.DataFrame, mlp_score: pd.DataFrame,
                       label: pd.DataFrame, symbols: list[str],
-                      thr_hi: float = THR_HI, thr_lo: float = THR_LO):
+                      thr_hi: float = THR_HI, thr_lo: float = THR_LO,
+                      mlp_max_w: float = 1.0):
     """因果 regime 连续混合：trailing 用 shift(2) 避免前视。返回 soft 分与诊断序列。
 
     标签口径: label[t] = open[t+2]/open[t+1]-1 (next_open_return_label, horizon_days=1),
@@ -140,7 +160,23 @@ def causal_soft_blend(linear_score: pd.DataFrame, mlp_score: pd.DataFrame,
     trailing = mlp_ic.shift(2).rolling(IC_WIN, min_periods=IC_MIN).mean()
     alpha_dead = (trailing < thr_lo).fillna(False)
     adv = ((thr_hi - trailing) / (thr_hi - thr_lo)).clip(0, 1).fillna(1.0)  # 1=全线性(防御)
-    soft = adv.values[:, None] * linear_score.values + (1 - adv.values[:, None]) * mlp_score.values
+    # mlp_max_w: MLP 权重上限（2026-08-31 新增，默认 1.0 = 旧行为不变）。
+    #
+    # ⚠️ 重要（2026-09-01 更正）：切勿据 IC 指标把本值设为 0。
+    #   曾有诊断显示（旧欠训练 MLP，cap=8000/iters=150）：
+    #     纯线性 IC +0.0604(IR 0.318) | 纯 MLP +0.0204(IR 0.143) | 实际合成 +0.0496
+    #     -> 看似"混合损失 17.9% IC"。但生产 A/B 结论【完全相反】：
+    #        纯线性 sharpe 0.639 < 混合 0.787（见 outputs/ab_mlp_blend/AB_结论报告.md）。
+    #   即 IC 不是组合层表现的可靠代理：IC 是全宇宙秩相关而组合只取 top_n；两个部分去相关的
+    #   信号叠加有分散化收益；且 regime 闸门用 MLP 的 trailing IC，换分数会造成闸门与分数错配。
+    #
+    # 真正的病根是【欠训练】，正确解法是喂更多数据（现默认 cap=30000/iters=400），
+    # 而非砍掉 MLP 权重。强化后生产 sharpe 0.787 -> 1.044。
+    #
+    # 注意：trailing（regime 闸门信号）不受此开关影响，仍由 MLP IC 驱动，保证 A/B 只改一处。
+    mlp_w = (1.0 - adv).clip(upper=mlp_max_w)
+    soft = ((1.0 - mlp_w).values[:, None] * linear_score.values
+            + mlp_w.values[:, None] * mlp_score.values)
     soft = pd.DataFrame(soft, index=label.index, columns=symbols)
     return soft, trailing, adv, alpha_dead, mlp_ic
 
@@ -311,7 +347,11 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
                        scores_npz: Path | None = None,
                        watchlist_mask_dir: str | None = None,
                        use_wq: bool = False,
-                       use_broker: bool = False
+                       use_broker: bool = False,
+                       use_a158: bool = False,
+                       mlp_max_w: float = 1.0,
+                       mlp_hid: int = 16, mlp_lr: float = 0.05,
+                       mlp_iters: int = 150, mlp_cap: int = 8000
                        ) -> tuple[pd.DataFrame, dict, pd.DataFrame | None]:
     """生产入口：返回 (soft_score, regime_report, book_equity)。
 
@@ -332,7 +372,7 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
       - "regime_gross": 仅把 regime 的 gross 降权(0.40)写进回测，top_n 固定。
       - "joint"       : regime->gross 降权 + top_n 按容量余量动态下调（dead 收窄到 20~40）。默认。
     """
-    P = build_panel(panel_csv, use_wq=use_wq, use_broker=use_broker)
+    P = build_panel(panel_csv, use_wq=use_wq, use_broker=use_broker, use_a158=use_a158)
 
     # --- 候选宇宙分支（根治"筛选后自选股"前视，对应 option 2：point-in-time 框架） ---
     # PIT 掩码在每个再平衡日 t 只用 ≤t 信息判合格（上市/未退市/未停牌/trailing 流动性/最小历史），
@@ -370,7 +410,8 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
     def _build_scores():
         return build_linear_mlp_scores(
             P["features"], P["label"], P["symbols"], P["feat_arrays"], P["label_arr"], score_mask,
-            refresh_live_daily=refresh_live_daily)
+            refresh_live_daily=refresh_live_daily,
+            mlp_hid=mlp_hid, mlp_lr=mlp_lr, mlp_iters=mlp_iters, mlp_cap=mlp_cap)
     linear_score, mlp_score = load_or_build(
         scores_npz, P["label"].index, P["symbols"], _build_scores,
         panel_csv=panel_csv, use_cache=use_cache)
@@ -378,7 +419,8 @@ def produce_book_score(panel_csv: Path = PANEL, aum: float = BOOK_AUM,
     soft_thr_hi, soft_thr_lo = THR_HI, THR_LO
     gate_thr_hi, gate_thr_lo = THR_HI, THR_LO
     soft, trailing, adv, alpha_dead, mlp_ic = causal_soft_blend(
-        linear_score, mlp_score, P["label"], P["symbols"], thr_hi=soft_thr_hi, thr_lo=soft_thr_lo)
+        linear_score, mlp_score, P["label"], P["symbols"],
+        thr_hi=soft_thr_hi, thr_lo=soft_thr_lo, mlp_max_w=mlp_max_w)
     rep = regime_report(trailing, adv, alpha_dead, mlp_ic, P["label"].index)
     rep["universe"] = rep_universe
 
@@ -531,6 +573,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-broker", action="store_true",
                         help="禁用券商研报因子并入（默认已并入：验证显示生产净增量正向 sharpe +0.066 / dd −0.148，"
                              "ALERT 仍 False；如需还原旧生产行为加此开关）")
+    parser.add_argument("--a158", action="store_true",
+                        help="启用 QLib Alpha158 因子并入（opt-in 平铺叠加：在 base(+broker) 之上叠加 157 个 "
+                             "a158_* 因子；默认关闭——双栈 select_positive 验证显示无可靠正向净增量"
+                             "（WQ 栈 Δ=-0.208、broker 栈 Δ=+0.010 噪声级）且回撤恶化）")
+    parser.add_argument("--mlp-max-w", type=float, default=1.0, metavar="W",
+                        help="MLP 分支权重上限 [0,1]，默认 1.0 = 旧行为。诊断显示 MLP 的 OOS IC 仅 "
+                             "+0.0204 而线性 +0.0604，混合使合成分 IC 相对纯线性损失 17.9%%；"
+                             "设 0 即退化为纯线性（A/B 用，regime 闸门信号不受影响）")
+    parser.add_argument("--mlp-cap", type=int, default=30000, metavar="N",
+                        help="MLP 单次训练样本上限。默认 30000（2026-09-01 由 8000 上调：原值仅为可用量的 "
+                             "<1%%，属严重欠训练。A/B 生产路线 sharpe 0.787->1.044）。"
+                             "传 8000 可还原旧行为")
+    parser.add_argument("--mlp-iters", type=int, default=400, metavar="N",
+                        help="MLP 训练迭代数。默认 400（2026-09-01 由 150 上调，同上 A/B）。传 150 可还原旧行为")
+    parser.add_argument("--mlp-hid", type=int, default=16, metavar="N",
+                        help="MLP 隐层宽度（默认 16）")
     parser.add_argument("--watchlist-mask-dir", default=None,
                         help="watchlist 宇宙掩码目录覆盖（默认 outputs/watchlist_audit；聚焦实验用独立掩码）")
     args = parser.parse_args(argv)
@@ -542,16 +600,28 @@ def main(argv: list[str] | None = None) -> int:
 
     # 券商研报因子默认并入生产（验证净增量正向）；--no-broker 可还原旧行为。
     use_broker = not args.no_broker
+    # 分数缓存按"启用的可选因子集"内容寻址：三者可任意组合，旧的级联三元会在 --wq 与默认
+    # 开启的 broker 同时生效时误用 _wq.npz（而实际因子栈还含 broker），加 a158 后必须修正。
+    _suffix = (("_wq" if args.wq else "")
+               + ("_broker" if use_broker else "")
+               + ("_a158" if args.a158 else ""))
+    # MLP 配置【无条件】参与内容寻址。
+    # ⚠️ 不能只在"非默认"时加标签：一旦把某个强化配置改为新的默认值而缓存名不变，
+    # load_or_build 的面板指纹校验仍会通过（面板没变），从而【静默复用旧配置算出的分数】，
+    # 造成"改了参数却毫无变化"的假象。无条件编码可根除此类静默串味。
+    # 代价：默认缓存名由 _broker 变为 _broker_mlp{hid}c{cap}i{iters}，需重建一次（一次性成本）。
+    _suffix += f"_mlp{args.mlp_hid}c{args.mlp_cap}i{args.mlp_iters}"
     soft, rep, eq = produce_book_score(
         Path(args.panel), BOOK_AUM, schedule=args.schedule, universe=args.universe,
         use_cache=True, skip_backtest=args.skip_backtest, start_date=args.start_date,
         refresh_live_daily=args.refresh_live_daily,
         scores_npz=(Path(args.scores_npz) if args.scores_npz
-                    else (P10E / f"linear_mlp_scores_{args.universe}_wq.npz") if args.wq
-                    else (P10E / f"linear_mlp_scores_{args.universe}_broker.npz") if use_broker
+                    else (P10E / f"linear_mlp_scores_{args.universe}{_suffix}.npz") if _suffix
                     else None),
         watchlist_mask_dir=args.watchlist_mask_dir,
-        use_wq=args.wq, use_broker=use_broker)
+        use_wq=args.wq, use_broker=use_broker, use_a158=args.a158,
+        mlp_max_w=args.mlp_max_w,
+        mlp_hid=args.mlp_hid, mlp_lr=0.05, mlp_iters=args.mlp_iters, mlp_cap=args.mlp_cap)
     alert = regime_alert(rep)
 
     if args.monitor:

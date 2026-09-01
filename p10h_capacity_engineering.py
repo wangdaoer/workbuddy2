@@ -32,7 +32,7 @@ from p10c_ensemble import (
 from production_soft_score import build_panel, causal_soft_blend, SCORES_NPZ
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 OUT = HERE / "outputs" / "p10h_capacity_engineering"
 OUT.mkdir(parents=True, exist_ok=True)
 RUN_LOG = OUT / "run.log"
