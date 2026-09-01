@@ -32,7 +32,8 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "outputs" / "watchlist_audit"
 HEALTH_DIR = OUT / "strategy_health"
 PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
-NPZ_DEFAULT = HERE / "outputs" / "p10e_regime_gated" / "linear_mlp_scores_pit.npz"
+# 2026-08-31 修复：生产文件为 _broker 后缀（broker 因子并入生产默认），旧 _pit.npz 已停更。
+NPZ_DEFAULT = HERE / "outputs" / "p10e_regime_gated" / "linear_mlp_scores_pit_broker.npz"
 OVERLAY_DEFAULT = OUT / "full_overlay_calibrated.csv"
 CAND_DEFAULT = OUT / "full_candidates.csv"
 THS_DIR = Path("D:/codex/outputs/stock-analysis-dashboard/input")

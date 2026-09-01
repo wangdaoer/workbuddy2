@@ -102,7 +102,11 @@ def main() -> None:
         max_blend = min(max_blend, args.max_blend_seats)
     else:
         max_blend = min(max_blend, int(round(seat_cap * args.blend_share)))
-    blend_keep = blend_top[:max_blend]
+    # 2026-08-31 修复：顶入票必须能映射到 overlay 候选行（blend 名单 asof 落后/模型变更时
+    # 交集可能极小），否则 new_selected 含无权重行 -> 实际标记席位不足 -> 总权重漂移校验失败。
+    # 过滤后有多少并入多少，剩余席位由 overlay 原 selected 补足，总权重/席位恒不变。
+    df_syms = set(df["symbol"])
+    blend_keep = [s for s in blend_top if s in df_syms][:max_blend]
     overlay_fill = [s for s in overlay_sel_syms if s not in set(blend_keep)]
     overlay_fill = overlay_fill[: max(0, seat_cap - len(blend_keep))]
     new_selected = set(blend_keep) | set(overlay_fill)
@@ -134,12 +138,12 @@ def main() -> None:
     # ---- 并入校验 (P0-2 加固; P1-3: 校验全部通过后才写盘，失败不留坏产物) ----
     keep_ranks = (blend.set_index("symbol").loc[blend_keep, "blended_rank"]
                   .dropna().sort_values().tolist()) if blend_keep else []
-    # rank 应连续 1..N（无字符串跳号遗留）
+    # 过滤后 rank 天然可能有空洞（旧名单与今日候选交集小）：只要求严格递增且无重复，
+    # 不再强制从 1 连续（原 1..N 校验在过滤后必然误报）。
     if keep_ranks:
-        expected = list(range(1, len(keep_ranks) + 1))
-        if keep_ranks != expected:
+        if any(b >= a for a, b in zip(keep_ranks, keep_ranks[1:])):
             raise SystemExit(
-                f"[merge] 顶入 rank 不连续(疑似排序bug): got {keep_ranks} expected {expected}")
+                f"[merge] 顶入 rank 非严格递增(疑似排序bug): got {keep_ranks}")
     # 总权重必须等于 derisked 原 selected 总权重（暴露档位不变）
     final_sel = df[df[SEL_FLAG]]
     final_w = float(final_sel[WEIGHT_COLS[0]].sum())

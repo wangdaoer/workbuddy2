@@ -31,7 +31,7 @@ from production_soft_score import (
 from train_next_open_rank_model import run_walk_forward, daily_ic  # 引擎（含 top_n_schedule）
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 OUT = HERE / "outputs" / "p10j_threshold_optimization"
 OUT.mkdir(parents=True, exist_ok=True)
 RUN_LOG = OUT / "run.log"

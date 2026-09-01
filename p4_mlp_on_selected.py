@@ -34,7 +34,7 @@ from train_next_open_rank_model import (
 from p1_challenger import MLP
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P1_MLP = HERE / "outputs" / "p1_real" / "challenger" / "comparison.json"
 P3 = HERE / "outputs" / "p3_adaptive_selection" / "metrics.json"
 OUT = HERE / "outputs" / "p4_mlp_on_selected"

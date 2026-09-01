@@ -18,7 +18,7 @@ from run_backtest import load_prices, pivot_prices
 from train_next_open_rank_model import clean_matrix
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P10C = HERE / "outputs" / "p10c_ensemble"
 P10E = HERE / "outputs" / "p10e_regime_gated"
 MAX_ABS = 0.22

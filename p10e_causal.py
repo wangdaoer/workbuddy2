@@ -30,7 +30,7 @@ from p10c_ensemble import (
 from score_cache import load_or_build  # 内容寻址缓存守卫（根治换面板形状错）
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 OUT = HERE / "outputs" / "p10e_regime_gated"
 SCORES_NPZ = OUT / "linear_mlp_scores.npz"
 RUN_LOG = OUT / "run_causal.log"

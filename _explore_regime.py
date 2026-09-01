@@ -13,7 +13,7 @@ from run_backtest import load_prices, pivot_prices
 from train_next_open_rank_model import clean_matrix, load_market_exposure, build_features
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 raw = load_prices(PANEL, None, None)
 close = clean_matrix(pivot_prices(raw, "close"), 0.22)
 open_px = clean_matrix(pivot_prices(raw, "open").reindex_like(close), 0.22)

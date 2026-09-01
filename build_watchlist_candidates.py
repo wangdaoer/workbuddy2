@@ -37,7 +37,8 @@ SCORE_COLUMN = "mlp"  # 用 mlp 因果分作候选分
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scores-npz", default=str(P10E / "linear_mlp_scores_pit.npz"))
+    # 2026-08-31 修复：与 production_soft_score 生产默认(broker 并入)命名对齐，避免读到停更旧文件。
+    parser.add_argument("--scores-npz", default=str(P10E / "linear_mlp_scores_pit_broker.npz"))
     parser.add_argument("--mode", choices=("watchlist", "full"), default="watchlist",
                         help="watchlist=自选宇宙∩分数(小集)；full=全市场有分候选(生产用法：全市场出票+行为叠加)")
     parser.add_argument("--out", default=None, help="输出路径覆盖")

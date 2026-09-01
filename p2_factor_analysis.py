@@ -33,7 +33,7 @@ from train_next_open_rank_model import (
 )
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 INC_METRICS = HERE / "outputs" / "p1_real" / "next_open_rank_model" / "metrics.json"
 OUT = HERE / "outputs" / "p2_factor_analysis"
 OUT.mkdir(parents=True, exist_ok=True)

@@ -27,7 +27,7 @@ from train_next_open_rank_model import (
 from factor_expansion import build_features_expanded
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 OUT = HERE / "outputs" / "p10_factor_expansion"
 OUT.mkdir(parents=True, exist_ok=True)
 

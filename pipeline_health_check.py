@@ -28,7 +28,8 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
-NPZ_GLOB = str(HERE / "outputs" / "**" / "linear_mlp_scores_pit.npz")
+# 2026-08-31 修复：生产文件为 _broker 后缀（broker 因子并入生产默认），旧 _pit.npz 已停更。
+NPZ_GLOB = str(HERE / "outputs" / "**" / "linear_mlp_scores_pit_broker.npz")
 REGIME_GLOB = str(HERE / "outputs" / "**" / "regime_monitor_*.json")
 OVERLAY = HERE / "outputs" / "watchlist_audit" / "full_overlay_calibrated.csv"
 LEDGER = HERE / "outputs" / "forward_test" / "ledger.csv"

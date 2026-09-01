@@ -31,7 +31,7 @@ from train_next_open_rank_model import (
 )
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P8 = HERE / "outputs" / "p8_liquid_universe" / "metrics.json"
 OUT = HERE / "outputs" / "p8b_dynamic_liquidity"
 OUT.mkdir(parents=True, exist_ok=True)

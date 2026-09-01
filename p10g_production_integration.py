@@ -32,7 +32,7 @@ from p10c_ensemble import (
 )
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P10E = HERE / "outputs" / "p10e_regime_gated"
 SCORES_NPZ = P10E / "linear_mlp_scores.npz"
 OUT = HERE / "outputs" / "p10g_production_integration"

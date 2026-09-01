@@ -27,7 +27,7 @@ from train_next_open_rank_model import (
 )
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P3 = HERE / "outputs" / "p3_adaptive_selection" / "metrics.json"
 P4 = HERE / "outputs" / "p4_mlp_on_selected" / "metrics.json"
 OUT = HERE / "outputs" / "p5_regime_gated"

@@ -32,7 +32,7 @@ from train_next_open_rank_model import (
 from p1_challenger import MLP, walk_forward_scores
 
 HERE = Path(__file__).resolve().parent
-PANEL = HERE / "external_data" / "daily-market-data-tdx" / "data_panel.csv"
+PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 INC_DIR = HERE / "outputs" / "p1_real" / "next_open_rank_model"
 OUT = HERE / "outputs" / "p1_real" / "challenger"
 OUT.mkdir(parents=True, exist_ok=True)
