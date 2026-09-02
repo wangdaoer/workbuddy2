@@ -50,13 +50,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="每日：全市场出票 + 个人行为叠加")
     # 2026-08-31 修复：生产入口(production_soft_score) broker 并入后默认文件名带 _broker 后缀，
     # 旧 _pit.npz 自 08-26 起停更（903 天 vs 面板 907 天 shape 错）。此处同步指向权威文件。
-    parser.add_argument("--scores-npz", default="outputs/p10e_regime_gated/linear_mlp_scores_pit_broker.npz")
+    # 2026-09-02 修复：MLP 配置参与内容寻址后缓存名带参数后缀，默认改为动态解析最新 broker npz。
+    parser.add_argument("--scores-npz", default=None)
     parser.add_argument("--asof", default=None, help="仅用于命名日报（默认取 npz 最后有分日）")
     parser.add_argument("--no-refresh", action="store_true",
                         help="跳过名单产物刷新（名单未更新时省 1-2 分钟）")
     args = parser.parse_args()
 
-    npz = Path(args.scores_npz)
+    from production_soft_score import latest_pit_broker_npz
+
+    npz = Path(args.scores_npz) if args.scores_npz else latest_pit_broker_npz()
     if not npz.exists():
         raise SystemExit(f"缺失 {npz}：请先跑 production_soft_score --universe pit 生成分数后再执行")
 

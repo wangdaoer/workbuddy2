@@ -29,7 +29,10 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 # 2026-08-31 修复：生产文件为 _broker 后缀（broker 因子并入生产默认），旧 _pit.npz 已停更。
-NPZ_GLOB = str(HERE / "outputs" / "**" / "linear_mlp_scores_pit_broker.npz")
+# 2026-09-02 修复：MLP 配置参与内容寻址后缓存名带参数后缀（如 _mlp16c30000i400）；
+# 不再靠通配+mtime 取最新（非默认配置跑测试会把 mtime 顶掉导致静默错配），
+# 改用 production_soft_score.latest_pit_broker_npz() 读生产维护的 LATEST 指针。
+from production_soft_score import latest_pit_broker_npz  # noqa: E402
 REGIME_GLOB = str(HERE / "outputs" / "**" / "regime_monitor_*.json")
 OVERLAY = HERE / "outputs" / "watchlist_audit" / "full_overlay_calibrated.csv"
 LEDGER = HERE / "outputs" / "forward_test" / "ledger.csv"
@@ -70,9 +73,13 @@ def run(panel_path: Path = PANEL, expect: str | None = None) -> tuple[list[dict]
     checks.append(_check("PANEL", "OK", f"面板末日 {plast} / {ndays} 交易日"))
 
     # --- npz ---
-    npz = _latest(NPZ_GLOB)
+    try:
+        npz = str(latest_pit_broker_npz())
+    except SystemExit as e:
+        npz = None
+        checks.append(_check("SCORES_NPZ", "ERROR", str(e)))
     if not npz:
-        checks.append(_check("SCORES_NPZ", "ERROR", "未找到 linear_mlp_scores_pit.npz"))
+        checks.append(_check("SCORES_NPZ", "ERROR", "未找到 linear_mlp_scores_pit_broker LATEST 指向的 npz"))
     else:
         try:
             d = np.load(npz, allow_pickle=True)

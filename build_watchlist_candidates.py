@@ -26,7 +26,7 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from production_soft_score import P10E, build_panel  # noqa: E402
+from production_soft_score import P10E, build_panel, latest_pit_broker_npz  # noqa: E402
 from watchlist_leak_audit import load_watchlist_mask  # noqa: E402
 
 PANEL = Path("external_data/daily-market-data/data_panel.csv")
@@ -38,12 +38,13 @@ SCORE_COLUMN = "mlp"  # 用 mlp 因果分作候选分
 def main() -> None:
     parser = argparse.ArgumentParser()
     # 2026-08-31 修复：与 production_soft_score 生产默认(broker 并入)命名对齐，避免读到停更旧文件。
-    parser.add_argument("--scores-npz", default=str(P10E / "linear_mlp_scores_pit_broker.npz"))
+    # 2026-09-02 修复：MLP 配置参与内容寻址后缓存名带参数后缀，默认改为动态解析最新 broker npz。
+    parser.add_argument("--scores-npz", default=None)
     parser.add_argument("--mode", choices=("watchlist", "full"), default="watchlist",
                         help="watchlist=自选宇宙∩分数(小集)；full=全市场有分候选(生产用法：全市场出票+行为叠加)")
     parser.add_argument("--out", default=None, help="输出路径覆盖")
     args = parser.parse_args()
-    npz = Path(args.scores_npz)
+    npz = Path(args.scores_npz) if args.scores_npz else latest_pit_broker_npz()
     if not npz.exists():
         raise SystemExit(f"缺失 {npz}；请先跑 production_soft_score 重建后再执行")
     d = np.load(npz, allow_pickle=True)

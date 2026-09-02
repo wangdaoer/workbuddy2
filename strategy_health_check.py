@@ -33,7 +33,16 @@ OUT = HERE / "outputs" / "watchlist_audit"
 HEALTH_DIR = OUT / "strategy_health"
 PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 # 2026-08-31 修复：生产文件为 _broker 后缀（broker 因子并入生产默认），旧 _pit.npz 已停更。
-NPZ_DEFAULT = HERE / "outputs" / "p10e_regime_gated" / "linear_mlp_scores_pit_broker.npz"
+# 2026-09-02 修复：MLP 配置参与内容寻址后缓存名带参数后缀，运行时动态解析最新 broker npz。
+def _npz_default() -> Path:
+    from production_soft_score import latest_pit_broker_npz
+    try:
+        return latest_pit_broker_npz()
+    except SystemExit:
+        return HERE / "outputs" / "p10e_regime_gated" / "linear_mlp_scores_pit_broker.npz"
+
+
+NPZ_DEFAULT = _npz_default()
 OVERLAY_DEFAULT = OUT / "full_overlay_calibrated.csv"
 CAND_DEFAULT = OUT / "full_candidates.csv"
 THS_DIR = Path("D:/codex/outputs/stock-analysis-dashboard/input")

@@ -394,6 +394,12 @@ champion 复核必须拆分年度和市场状态，并用每日净收益复利�
 - 脚本须带 CLI 且日更友好（MOS 规则 16 的落地约束）：`--panel/--scores-npz/--output-dir/--asof-date`
   等由流水线注入；图表/集成产物带日期令牌或每日原地刷新；卫星腿（sleeve/hk_passive/hk_active）
   与基线簿缺失时自动跳过对应段（不崩溃）；容量段依赖 `linear_mlp_scores.npz`（外部前提，缺失则跳过）。
+- **分数缓存命名（2026-09-02 强制）**：`production_soft_score` 将可选因子（wq/broker/a158）与
+  MLP 配置（cap/iters）**无条件**纳入内容寻址，缓存名随配置演进变化（如 `linear_mlp_scores_pit_broker.npz`
+  → `_broker_mlp16c30000i400.npz`）。**任何下游禁止硬编码 npz 文件名**，一律调用
+  `production_soft_score.latest_pit_broker_npz()`（读生产维护的 LATEST 指针文件，mtime 仅指针缺失时回退）；缺失时该 helper
+  SystemExit 并提示先跑 production_soft_score 重建。硬编码旧名已两次导致 shape 错
+  （08-31 `_broker` 后缀、09-01 `_mlp` 参数后缀），同类问题第三次出现将把该解析前移到默认预检。
 - 研究型 P10 报告（`p10i` 联合调度、`p10h` 容量工程、`p10j` 阈值优化、`p10e_regime_gated` 分数构建）
   属上游验证，结论已固化进 `production_soft_score` 固定配置，**不接入每日流水线**，保持离线手动跑。
 - 回归测试守护：`tests/test_daily_model_pipeline.py` 的 `test_default_pipeline_includes_p10g_*`、

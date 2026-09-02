@@ -23,6 +23,7 @@ regime 监控与 monitor_factor_decay.classify_overall_status 同构（status + 
 
 from __future__ import annotations
 import json
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -53,6 +54,36 @@ HERE = Path(__file__).resolve().parent
 PANEL = HERE / "external_data" / "daily-market-data" / "data_panel.csv"
 P10E = HERE / "outputs" / "p10e_regime_gated"
 SCORES_NPZ = P10E / "linear_mlp_scores.npz"
+# 2026-09-02 指针方案：生产跑完(pit+broker)把实际产出的 npz 名写进本文件，
+# 下游只读指针，避免按 mtime 取最新导致的「静默错配」（A 配置生产却读到 B 分数）。
+PIT_BROKER_LATEST = P10E / "linear_mlp_scores_pit_broker_LATEST.txt"
+
+
+def latest_pit_broker_npz() -> Path:
+    """返回当前生产默认(pit+broker)最新产出的分数缓存。
+
+    2026-09-02 起 MLP 配置（cap/iters）无条件参与内容寻址，缓存名形如
+    linear_mlp_scores_pit_broker_mlp16c60000i800.npz；参数调整后旧名文件会停更。
+    下游（build_watchlist_candidates / run_daily_overlay / strategy_health_check /
+    pipeline_health_check）统一走本函数解析。
+
+    ⚠️ 不按 mtime 选最新：非默认配置跑测试会把某个缓存的 mtime 顶到最新，
+    导致下游静默读到错误配置的分数。改为优先读生产维护的 LATEST 指针文件；
+    仅当指针缺失（首次/被删）才退回 mtime 最新并打 stderr 告警。
+    """
+    if PIT_BROKER_LATEST.exists():
+        name = PIT_BROKER_LATEST.read_text(encoding="utf-8").strip()
+        if name:
+            return P10E / name
+    cands = sorted(P10E.glob("linear_mlp_scores_pit_broker*.npz"),
+                   key=lambda f: f.stat().st_mtime)
+    if not cands:
+        raise SystemExit(f"缺失 {PIT_BROKER_LATEST} 且无可回退的"
+                         f" {P10E}/linear_mlp_scores_pit_broker*.npz："
+                         f"请先跑 production_soft_score --universe pit 重建")
+    sys.stderr.write(f"[warn] 缺失指针 {PIT_BROKER_LATEST.name}，退回 mtime 最新"
+                     f" {cands[-1].name}\n")
+    return cands[-1]
 OUT = HERE / "outputs" / "production_soft_score"
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -627,6 +658,14 @@ def main(argv: list[str] | None = None) -> int:
         use_wq=args.wq, use_broker=use_broker, use_a158=args.a158,
         mlp_max_w=args.mlp_max_w,
         mlp_hid=args.mlp_hid, mlp_lr=0.05, mlp_iters=args.mlp_iters, mlp_cap=args.mlp_cap)
+    # 写 pit+broker 最新指针（供下游动态解析，避免 mtime 静默错配）。
+    # 仅当本次确实产出 pit 宇宙 + broker 栈时才更新；其他 universe/配置不污染该指针。
+    if args.universe == "pit" and use_broker:
+        _target = (Path(args.scores_npz) if args.scores_npz
+                   else P10E / f"linear_mlp_scores_{args.universe}{_suffix}.npz")
+        if _target.exists():
+            PIT_BROKER_LATEST.write_text(_target.name, encoding="utf-8")
+            print(f"[pointer] 已更新 pit_broker LATEST -> {_target.name}")
     alert = regime_alert(rep)
 
     if args.monitor:
