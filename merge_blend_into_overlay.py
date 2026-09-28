@@ -140,8 +140,15 @@ def main() -> None:
                   .dropna().sort_values().tolist()) if blend_keep else []
     # 过滤后 rank 天然可能有空洞（旧名单与今日候选交集小）：只要求严格递增且无重复，
     # 不再强制从 1 连续（原 1..N 校验在过滤后必然误报）。
+    #
+    # 2026-09-18 修复：原判据 `any(b >= a ...)` 方向写反。keep_ranks 已 sort_values()
+    # 升序，升序列表的每一对相邻元素天然满足 b > a，故该判据对「正确」输入恒为 True，
+    # 反而在 rank 确实非递增/有重复时通过 —— 是典型的「守卫反向」缺陷。
+    # 由于 zip 在 len<=1 时为空、any([]) 为 False，该缺陷在 blend 顶入 0/1 席时被长期
+    # 掩盖；2026-09-18 首次出现 4 席顶入（ranks 2/5/13/14）才暴露。
+    # 正确判据：检测「非严格递增」（相邻 b <= a，含重复）。
     if keep_ranks:
-        if any(b >= a for a, b in zip(keep_ranks, keep_ranks[1:])):
+        if any(b <= a for a, b in zip(keep_ranks, keep_ranks[1:])):
             raise SystemExit(
                 f"[merge] 顶入 rank 非严格递增(疑似排序bug): got {keep_ranks}")
     # 总权重必须等于 derisked 原 selected 总权重（暴露档位不变）

@@ -406,6 +406,29 @@ champion 复核必须拆分年度和市场状态，并用每日净收益复利�
   `test_pipeline_can_skip_p10g_*`、`test_parse_args_accepts_skip_p10g_*`、`test_p10g_production_*_status_branches`。
 
 
+### 17. 守卫必须验证「方向」，且必须有覆盖其触发条件的回归测试
+
+- **反面案例（2026-09-18，`merge_blend_into_overlay.py` 方案B并入）**：顶入 rank 守卫写成
+  `any(b >= a for a, b in zip(keep_ranks, keep_ranks[1:]))`。`keep_ranks` 在上一行已
+  `sort_values()` 升序，升序序列的相邻元素天然满足 `b > a`，因此该判据对**正确**输入恒为
+  `True`、对**错误**输入（重复/逆序）恒为 `False` —— 判据方向整体写反，守卫 100% 反着工作。
+- **为何被长期掩盖**：`zip` 在 `len(keep_ranks) <= 1` 时为空，`any([]) == False`。而此前
+  方案B名单与当日 overlay 候选交集极小（连续多日顶入 0 席、09-17 仅 1 席），守卫从未真正
+  被求值。09-18 首次出现 4 席顶入（ranks 2/5/13/14）才暴露，且表现为「管线步骤 3.6b 直接
+  EXIT=1、blended overlay 当日不产出」。
+- **强制要求**：
+  1. 任何 `assert`/守卫/`SystemExit` 判据，必须**至少构造一个应当通过的正例和一个应当拒绝
+     的反例**来证明其方向正确。只测「不报错」等于没测。
+  2. 守卫的触发条件若依赖列表长度、样本量、交集大小等**可能长期为 0/1 的量**，必须显式测试
+     `n >= 2` 的分支，否则该守卫在真实故障出现前一直是死代码。
+  3. 排序后再做单调性校验时，判据必须检测「违反单调」（`b <= a`），而非「满足单调」（`b >= a`）。
+- 回归测试：`tests/test_merge_blend_rank_guard.py`（`test_multiple_blend_seats_with_rank_gaps_pass`
+  复现 4 席顶入、`test_single_blend_seat_still_passes` 覆盖曾被掩盖的 ≤1 席路径、
+  `test_duplicate_rank_is_rejected` 锁定负向 fail-closed 且不留坏产物）。
+- **通用教训**：fail-closed 守卫本身也是代码，同样会写反。守卫反向的后果比没有守卫更危险 ——
+  它会在正常路径上阻断流水线，同时放过真正的数据缺陷。新增守卫必须与正/负例测试同时提交。
+
+
 ## 日更入口
 
 每天数据更新后，从项目根目录运行：
